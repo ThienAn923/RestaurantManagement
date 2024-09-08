@@ -1,0 +1,113 @@
+datasource db {
+  provider = "mongodb"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model Dish {
+  id          String  @id @default(auto()) @map("_id") @db.ObjectId
+  name        String
+  description String
+  available   Boolean @default(true)
+  dishType    String  @db.ObjectId
+  isDeleted   Boolean @default(false)
+
+  costs        Cost[]
+  orderDetails OrderDetail[]
+
+  DishType DishType @relation(fields: [dishType], references: [id])
+}
+
+model Cost {
+  id         String   @id @default(auto()) @map("_id") @db.ObjectId
+  dishId     String   @db.ObjectId
+  cost       Float
+  timeChange DateTime @default(now())
+
+  dish Dish @relation(fields: [dishId], references: [id])
+}
+
+model DishType {
+  id                  String  @id @default(auto()) @map("_id") @db.ObjectId
+  DishTypeName        String
+  DishTypeDescription String
+  isDeleted           Boolean @default(false)
+
+  dish_list Dish[]
+}
+
+model Order {
+  id          String  @id @default(auto()) @map("_id") @db.ObjectId
+  orderStatus Boolean @default(true)
+  employeeID  String  @db.ObjectId
+  orderNote   String
+  tableID     String? @unique @db.ObjectId
+
+  Employee    Employee      @relation(fields: [employeeID], references: [id])
+  Table       Table?        @relation(fields: [tableID], references: [id])
+  OrderDetail OrderDetail[]
+}
+
+model OrderDetail {
+  id       String @id @default(auto()) @map("_id") @db.ObjectId
+  dishId   String @db.ObjectId
+  quantity Int
+  orderID  String @db.ObjectId
+
+  Dish  Dish  @relation(fields: [dishId], references: [id])
+  Order Order @relation(fields: [orderID], references: [id])
+}
+
+model Table {
+  id          String  @id @default(auto()) @map("_id") @db.ObjectId
+  tableNumber Int
+  tableStatus Boolean @default(true)
+  seatNumber  Int
+  isDeleted   Boolean @default(true)
+
+  Booking Booking[]
+  Order   Order[]
+}
+
+model Booking {
+  id             String   @id @default(auto()) @map("_id") @db.ObjectId
+  timeStart      DateTime
+  timeEnd        DateTime
+  numberOfPeople Int
+  tableID        String   @db.ObjectId
+  clientID       String   @db.ObjectId
+
+  Client Client @relation(fields: [clientID], references: [id])
+  Table  Table  @relation(fields: [tableID], references: [id])
+}
+
+model Client {
+  id       String @id @default(auto()) @map("_id") @db.ObjectId
+  point    Int
+  personId String @unique
+
+  Booking Booking[]
+}
+
+model Person {
+  id             String    @id @default(auto()) @map("_id") @db.ObjectId
+  name           String
+  profilePicture String?
+  employee       Employee? @relation(fields: [employeeId], references: [id])
+  employeeId     String?   @db.ObjectId
+}
+
+model Employee {
+  id                  String   @id @default(auto()) @map("_id") @db.ObjectId
+  employeeAdress      String
+  employeeGender      Boolean  @default(true)
+  employeeDateOfBirth DateTime
+  personId            String
+  orders              Order[] //currently made 0->many order
+
+  position String
+  Person   Person[]
+}
