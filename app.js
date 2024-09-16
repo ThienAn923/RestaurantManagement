@@ -2,6 +2,7 @@ const express = require("express");
 const cors = require("cors");
 const app = express();
 const dishRouter = require('./app/route/dish.route');
+const dishTypeRouter = require('./app/route/dishType.route');
 const ApiError = require("./app/api-error");
 
 app.use(cors());
@@ -15,6 +16,8 @@ app.get("/dish", (req, res) => {
 });
 
 app.use("/api/dish", dishRouter);
+
+app.use("/api/DishType", dishTypeRouter);
 
 app.use((err, req, res,next) =>{
     return res.status(error.statusCode || 500).json({

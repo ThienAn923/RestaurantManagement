@@ -7,7 +7,6 @@ const router = express.Router();
 router.route("/")
     .get(DishController.getAllDishes)
     .post(DishController.createDish)
-    // .delete(DishController.deleteAll);
 
 
 router.route("/:id")

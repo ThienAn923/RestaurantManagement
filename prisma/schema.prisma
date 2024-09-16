@@ -18,7 +18,20 @@ model Dish {
   costs        Cost[]
   orderDetails OrderDetail[]
 
-  DishType DishType @relation(fields: [dishType], references: [id])
+  DishType           DishType             @relation(fields: [dishType], references: [id])
+  PromotionAfterDish PromotionAfterDish[]
+  invoiceDetail      invoiceDetail[]
+  Picture            Picture[]
+  comment            comment[]
+  Rating             Rating[]
+}
+
+model Picture {
+  id     String @id @default(auto()) @map("_id") @db.ObjectId
+  Link   String
+  dishId String @db.ObjectId
+
+  Dish Dish @relation(fields: [dishId], references: [id])
 }
 
 model Cost {
@@ -89,7 +102,13 @@ model Client {
   point    Int
   personId String @unique
 
-  Booking Booking[]
+  Booking      Booking[]
+  Person       Person[] //Hold on, does this mean client content person, which... sound weird, need to rethink?
+  voucherUnit  voucherUnit[]
+  Feedback     Feedback[]
+  comment      comment[]
+  commentReply commentReply[]
+  Rating       Rating[]
 }
 
 model Person {
@@ -98,6 +117,9 @@ model Person {
   profilePicture String?
   employee       Employee? @relation(fields: [employeeId], references: [id])
   employeeId     String?   @db.ObjectId
+  client         Client?   @relation(fields: [clientId], references: [id])
+  clientId       String?   @db.ObjectId
+  account        account[]
 }
 
 model Employee {
@@ -108,6 +130,266 @@ model Employee {
   personId            String
   orders              Order[] //currently made 0->many order
 
-  position String
-  Person   Person[]
+  Person        Person[]
+  Work          Work[]
+  FeedbackReply FeedbackReply[]
+}
+
+model account {
+  id               String  @id @default(auto()) @map("_id") @db.ObjectId
+  accountUsername  String
+  accountPassword  String
+  AccountAuthority Int
+  AccountAvatar    String?
+  personId         String  @db.ObjectId
+
+  Person Person @relation(fields: [personId], references: [id])
+}
+
+//new
+model Department {
+  id                    String  @id @default(auto()) @map("_id") @db.ObjectId
+  departmentID          String
+  departmentName        String
+  departmentDescription String?
+  Work                  Work[]
+}
+
+model Position {
+  id                  String  @id @default(auto()) @map("_id") @db.ObjectId
+  positionID          String
+  positionName        String
+  positionDescription String?
+  Work                Work[]
+}
+
+model Work {
+  id           String    @id @default(auto()) @map("_id") @db.ObjectId
+  startDay     DateTime
+  endDate      DateTime?
+  isDeleted    Boolean   @default(false)
+  employeeID   String    @db.ObjectId
+  departmentID String    @db.ObjectId
+  positionID   String    @db.ObjectId
+
+  Employee   Employee   @relation(fields: [employeeID], references: [id])
+  Department Department @relation(fields: [departmentID], references: [id])
+  Position   Position   @relation(fields: [positionID], references: [id])
+}
+
+model Promotion {
+  id                    String                  @id @default(auto()) @map("_id") @db.ObjectId
+  promotionName         String
+  promotionDescription  String?
+  discount              Float
+  startDate             DateTime
+  endDate               DateTime
+  isDeleted             Boolean                 @default(false)
+  PromotionAfterDish    PromotionAfterDish[]
+  PromotionAfterInvoice PromotionAfterInvoice[]
+}
+
+model PromotionAfterDish {
+  id          String  @id @default(auto()) @map("_id") @db.ObjectId
+  promotionID String  @db.ObjectId
+  dishID      String  @db.ObjectId
+  isDeleted   Boolean @default(false)
+
+  Promotion Promotion @relation(fields: [promotionID], references: [id])
+  Dish      Dish      @relation(fields: [dishID], references: [id])
+}
+
+model PromotionAfterInvoice {
+  id          String  @id @default(auto()) @map("_id") @db.ObjectId
+  promotionID String  @db.ObjectId
+  isDeleted   Boolean @default(false)
+
+  Promotion Promotion @relation(fields: [promotionID], references: [id])
+  Invoice   Invoice[]
+}
+
+//this model only ecept 1 promotion for 1 invoice at a time
+//if you want to add more promotion for 1 invoice, another model like "promotionOfInvoice" should be created
+//to store the promotionID and invoiceID, many to many relationship
+model Invoice {
+  id          String   @id @default(auto()) @map("_id") @db.ObjectId
+  invoiceDate DateTime @default(now())
+  totalCost   Float
+  orderNote   String?
+  employeeID  String   @db.ObjectId
+  tableID     String   @db.ObjectId
+  promotionID String?  @db.ObjectId
+
+  PromotionAfterInvoice PromotionAfterInvoice? @relation(fields: [promotionID], references: [id])
+  invoiceDetail         invoiceDetail[]
+  Payment               Payment[]
+}
+
+model invoiceDetail {
+  id        String @id @default(auto()) @map("_id") @db.ObjectId
+  invoiceID String @db.ObjectId
+  dishID    String @db.ObjectId
+  quantity  Int
+  totalCost Float
+
+  Invoice Invoice @relation(fields: [invoiceID], references: [id])
+  Dish    Dish    @relation(fields: [dishID], references: [id])
+}
+
+model Payment {
+  id                 String   @id @default(auto()) @map("_id") @db.ObjectId
+  paymentDate        DateTime
+  totalMoneyReceived Float
+  totalMoneyReturn   Float
+  totalMoney         Float
+  invoiceID          String   @db.ObjectId
+
+  Invoice Invoice @relation(fields: [invoiceID], references: [id])
+}
+
+//This space is for payment by cash and card
+
+//ingrediant stuff
+model ingrediant {
+  id                  String                @id @default(auto()) @map("_id") @db.ObjectId
+  ingrediantID        String
+  ingrediantName      String
+  isDeleted           Boolean               @default(false)
+  importInvoiceDetail importInvoiceDetail[]
+}
+
+model ingrediantType {
+  id                 String  @id @default(auto()) @map("_id") @db.ObjectId
+  ingrediantTypeID   String
+  ingrediantTypeName String
+  isDeleted          Boolean @default(false)
+}
+
+model Provider {
+  id            String          @id @default(auto()) @map("_id") @db.ObjectId
+  providerID    String
+  providerName  String
+  isDeleted     Boolean         @default(false)
+  importInvoice importInvoice[]
+}
+
+model importInvoice {
+  id              String   @id @default(auto()) @map("_id") @db.ObjectId
+  importInvoiceID String
+  importDate      DateTime
+  totalExpense    Float
+  providerID      String   @db.ObjectId
+
+  Provider            Provider              @relation(fields: [providerID], references: [id])
+  importInvoiceDetail importInvoiceDetail[]
+}
+
+model importInvoiceDetail {
+  id              String @id @default(auto()) @map("_id") @db.ObjectId
+  importInvoiceID String @db.ObjectId
+  ingrediantID    String @db.ObjectId
+  quantity        Int
+  totalExpense    Float
+
+  ImportInvoice importInvoice @relation(fields: [importInvoiceID], references: [id])
+  Ingrediant    ingrediant    @relation(fields: [ingrediantID], references: [id])
+}
+
+//client side stuff that i dont know if i would use it or not
+
+model Voucher {
+  id                 String  @id @default(auto()) @map("_id") @db.ObjectId
+  voucherID          String
+  voucherName        String
+  voucherPercentage  Float
+  voucherDescription String?
+  isDeleted          Boolean @default(false)
+
+  voucherUnit voucherUnit[]
+}
+
+model voucherUnit {
+  id                  String   @id @default(auto()) @map("_id") @db.ObjectId
+  voucherUnitID       String
+  voucherUnitCode     String
+  voucherReceivedDate DateTime
+  voucherExpiredDate  DateTime
+  clientID            String   @db.ObjectId
+  voucherID           String   @db.ObjectId
+  isDeleted           Boolean  @default(false)
+
+  Client  Client  @relation(fields: [clientID], references: [id])
+  Voucher Voucher @relation(fields: [voucherID], references: [id])
+}
+
+model gift {
+  id              String  @id @default(auto()) @map("_id") @db.ObjectId
+  giftID          String
+  giftName        String
+  giftQuantity    Int
+  giftImage       String
+  giftDescription String?
+  pointToExchange Int
+  isDeleted       Boolean @default(false)
+}
+
+// communitation stuff
+
+model Feedback {
+  id            String          @id @default(auto()) @map("_id") @db.ObjectId
+  Text          String
+  feedbackDate  DateTime
+  isDeleted     Boolean         @default(false)
+  FeedbackReply FeedbackReply[]
+  clientID      String          @db.ObjectId
+
+  Client Client @relation(fields: [clientID], references: [id])
+}
+
+model FeedbackReply {
+  id         String   @id @default(auto()) @map("_id") @db.ObjectId
+  feedbackID String   @db.ObjectId
+  replyText  String
+  replyDate  DateTime
+  isDeleted  Boolean  @default(false)
+  emlpoyeeID String   @db.ObjectId
+
+  Feedback Feedback @relation(fields: [feedbackID], references: [id])
+  Employee Employee @relation(fields: [emlpoyeeID], references: [id])
+}
+
+model comment {
+  id          String   @id @default(auto()) @map("_id") @db.ObjectId
+  commentText String
+  commentTime DateTime
+  isDeleted   Boolean  @default(false)
+  dishID      String   @db.ObjectId
+  clientID    String   @db.ObjectId
+
+  Client       Client         @relation(fields: [clientID], references: [id])
+  Dish         Dish           @relation(fields: [dishID], references: [id])
+  commentReply commentReply[]
+}
+
+model commentReply {
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  replyText String
+  replyTime DateTime
+  isDeleted Boolean  @default(false)
+  clientID  String   @db.ObjectId
+  commentID String   @db.ObjectId
+
+  comment comment @relation(fields: [commentID], references: [id])
+  Client  Client  @relation(fields: [clientID], references: [id])
+}
+
+model Rating {
+  id         String  @id @default(auto()) @map("_id") @db.ObjectId
+  ratingStar Int
+  isDeleted  Boolean @default(false)
+  dishID     String  @db.ObjectId
+  clientID   String  @db.ObjectId
+
+  Client Client @relation(fields: [clientID], references: [id])
+  Dish   Dish   @relation(fields: [dishID], references: [id])
 }
