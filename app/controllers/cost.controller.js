@@ -32,4 +32,4 @@ class CostController {
   }
 }
 
-module.exports = new DishController();
+module.exports = new CostController();

@@ -80,3 +80,5 @@ class TableController {
         }
     }
 }
+
+module.exports = new TableController();

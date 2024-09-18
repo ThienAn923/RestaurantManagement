@@ -149,7 +149,6 @@ model account {
 //new
 model Department {
   id                    String  @id @default(auto()) @map("_id") @db.ObjectId
-  departmentID          String
   departmentName        String
   departmentDescription String?
   Work                  Work[]
@@ -157,7 +156,6 @@ model Department {
 
 model Position {
   id                  String  @id @default(auto()) @map("_id") @db.ObjectId
-  positionID          String
   positionName        String
   positionDescription String?
   Work                Work[]

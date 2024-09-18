@@ -56,3 +56,5 @@ class IngredientController {
         }
     }
 }
+
+module.exports = new IngredientController();

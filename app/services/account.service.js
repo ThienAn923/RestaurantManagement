@@ -1,5 +1,5 @@
-const prisma = require('../../prisma/account');
-
+const prisma = require('../../prisma/client');
+// const bcrypt = require('bcrypt');
 class AccountService {
   async createDish(data) {
     return await prisma.account.create({ data });
@@ -30,6 +30,12 @@ class AccountService {
     return await prisma.account.update({
       where: { id },
       data: { isDeleted: true },
+    });
+  }
+
+  async getAccountByUsername(username) {
+    return await prisma.account.findFirst({
+        where: { accountUsername: username },
     });
   }
 }

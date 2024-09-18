@@ -1,4 +1,5 @@
-const prisma = require('../../prisma/importInvoice');
+const { PrismaClient } = require('@prisma/client');
+const prisma = new PrismaClient();
 
 class ImportInvoiceService {
     async createImportInvoice(data) {
@@ -63,3 +64,5 @@ class ImportInvoiceService {
         });
     }
 }
+
+module.exports = new ImportInvoiceService();

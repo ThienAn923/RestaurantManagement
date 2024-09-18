@@ -1,6 +1,6 @@
 const express = require("express");
 const DepartmentController = require("../controllers/department.controller.js");
-const { route } = require("../../app.js");
+
 
 const router = express.Router();
 
@@ -12,3 +12,5 @@ router.route("/:id")
     .get(DepartmentController.getDepartmentById)
     .put(DepartmentController.updateDepartment)
     .delete(DepartmentController.deleteDepartment);
+
+module.exports = router;

@@ -40,3 +40,5 @@ class ProviderService {
         });
     }
 }
+
+module.exports = new ProviderService();

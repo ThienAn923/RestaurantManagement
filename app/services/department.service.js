@@ -1,4 +1,6 @@
-const prisma = require('../../prisma/Department');
+const { PrismaClient } = require('@prisma/client');
+const prisma = new PrismaClient();
+
 
 class DepartmentService {
     async createDepartment(data) {
@@ -32,3 +34,5 @@ class DepartmentService {
         });
     }
 }
+
+module.exports = new DepartmentService();

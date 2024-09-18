@@ -1,4 +1,5 @@
-const prisma = require('../../prisma/promotionAfterInvoice');
+const { PrismaClient } = require('@prisma/client');
+const prisma = new PrismaClient();
 
 class PromotionAfterInvoiceService {
     async createPromotionAfterInvoice(data) {
@@ -93,3 +94,5 @@ class PromotionAfterInvoiceService {
     }
 
 }
+
+module.exports = new PromotionAfterInvoiceService();

@@ -56,3 +56,5 @@ class ProviderController {
         }
     }
 }
+
+module.exports = new ProviderController();

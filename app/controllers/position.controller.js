@@ -54,3 +54,5 @@ class PositionController {
         }
     }
 }
+
+module.exports = new PositionController();

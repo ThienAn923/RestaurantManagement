@@ -1,5 +1,7 @@
 const accountService = require('../services/account.service');
 const ApiError = require("../api-error");
+const bcrypt = require('bcrypt');
+const jwt = require('jsonwebtoken');
 
 class AccountController {
     async createAccount(req, res, next) {
@@ -53,4 +55,36 @@ class AccountController {
             return next(new ApiError(500, "An error occurred while deleting account"));
         }
     }
+
+
+    //temporary login function, will move part of this to service later (later mean never :D if i never come back to this file)
+    async login(req, res, next) {
+        const { accountUsername, accountPassword } = req.body;
+        if (!accountUsername || !accountPassword) {
+            return next(new ApiError(400, "Both username and password are required"));
+        }
+
+        try {
+            const account = await accountService.getAccountByUsername(accountUsername);
+            if (!account) {
+                return next(new ApiError(401, "Invalid username or password"));
+            }
+
+            // const isPasswordValid = await bcrypt.compare(accountPassword, account.password);
+            const isPasswordValid = accountPassword === account.accountPassword;
+            if (!isPasswordValid) {
+                return next(new ApiError(401, "Invalid username or password"));
+            }
+
+            //too complicated, will use temporary token for now (im still learning T.T)
+            // const token = jwt.sign({ id: account.id }, process.env.JWT_SECRET, { expiresIn: '10m' });
+            const token = 'temporary';
+            res.status(200).json({ token });
+        } catch (error) {
+            console.error('Error detected:', error);
+            return next(new ApiError(500, error.message));
+        }
+    }
 }
+
+module.exports = new AccountController();

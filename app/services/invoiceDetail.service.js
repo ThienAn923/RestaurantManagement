@@ -11,3 +11,5 @@ class InvoiceDetailService {
         });
     }
 }
+
+module.exports = new InvoiceDetailService();

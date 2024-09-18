@@ -1,4 +1,5 @@
-const prisma = require('../../prisma/ingredientType');
+const { PrismaClient } = require('@prisma/client');
+const prisma = new PrismaClient();
 
 class IngredientTypeService {
     async createIngredientType(data) {
@@ -31,3 +32,5 @@ class IngredientTypeService {
         });
     }
 }
+
+module.exports = new IngredientTypeService();

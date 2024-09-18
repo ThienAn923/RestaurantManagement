@@ -32,3 +32,5 @@ class ImportInvoiceController {
         }
     }
 }
+
+module.exports = new ImportInvoiceController();

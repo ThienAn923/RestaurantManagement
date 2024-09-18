@@ -1,6 +1,6 @@
 const express = require("express");
 const EmployeeController = require("../controllers/employee.controller.js");
-const { route } = require("../../app.js");
+
 
 const router = express.Router();
 
@@ -12,3 +12,5 @@ router.route("/:id")
     .get(EmployeeController.getEmployeeById)
     .put(EmployeeController.updateEmployee)
     .delete(EmployeeController.deleteEmployee);
+
+module.exports = router;

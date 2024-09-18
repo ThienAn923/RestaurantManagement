@@ -53,6 +53,6 @@ class DepartmentController {
             return next(new ApiError(500, "An error occurred while deleting department"));
         }
     }
-    
-    
 }
+
+module.exports = new DepartmentController();

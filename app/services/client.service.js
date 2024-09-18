@@ -115,5 +115,5 @@ class ClientService {
 }
 
 
-module.exports = new EmployeeService();
+module.exports = new ClientService();
 

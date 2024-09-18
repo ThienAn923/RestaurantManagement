@@ -1,4 +1,5 @@
-const prisma = require('../../prisma/promotion');
+const { PrismaClient } = require('@prisma/client');
+const prisma = new PrismaClient();
 
 class PromotionService {
     async createPromotion(data) {
@@ -31,3 +32,5 @@ class PromotionService {
         });
     }
 }
+
+module.exports = new PromotionService

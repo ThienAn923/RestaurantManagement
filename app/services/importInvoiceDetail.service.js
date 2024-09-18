@@ -36,3 +36,5 @@ class ImportInvoiceDetailService {
         });
     }
 }
+
+module.exports = new ImportInvoiceDetailService();

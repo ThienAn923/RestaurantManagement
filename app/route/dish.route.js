@@ -1,6 +1,6 @@
 const express = require("express");
 const DishController = require("../controllers/dish.controller.js");
-const { route } = require("../../app.js");
+
 
 const router = express.Router();
 

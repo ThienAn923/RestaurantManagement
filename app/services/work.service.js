@@ -45,3 +45,5 @@ class WorkService {
         });
     }
 }
+
+module.exports = new WorkService();

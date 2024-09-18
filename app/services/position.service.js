@@ -1,4 +1,5 @@
-const prisma = require('../../prisma/Position');
+const { PrismaClient } = require('@prisma/client');
+const prisma = new PrismaClient();
 
 class PositionService {
     async createPosition(data) {
@@ -32,3 +33,5 @@ class PositionService {
         });
     }
 }
+
+module.exports = new PositionService();
