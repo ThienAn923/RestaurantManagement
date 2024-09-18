@@ -15,7 +15,7 @@ const ingredientTypeRouter = require('./app/route/ingredientType.route');
 const positionRouter = require('./app/route/position.route');
 const promotionRouter = require('./app/route/promotion.route');
 const tableRouter = require('./app/route/table.route');
-
+const login = require('./app/route/login.route');
 
 const ApiError = require("./app/api-error");
 
@@ -28,6 +28,8 @@ app.get("/", (req, res) => {
 app.get("/dish", (req, res) => {
     res.json({ message: "test"});
 });
+
+app.use("/login", login)
 
 app.use("/api/dish", dishRouter);
 
