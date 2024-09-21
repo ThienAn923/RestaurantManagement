@@ -2,17 +2,17 @@
 const prisma = require('../../prisma/client'); // Go up two directories from 'service' to 'project' then into 'prisma'
 
 class TableService {
-    async createDish(data) {
+    async createTable(data) {
         return await prisma.table.create({ data });
     }
 
-    async getDishById(id) {
+    async getTableById(id) {
         return await prisma.table.findUnique({
         where: { id },
         });
     }
 
-    async getAllTablees() {
+    async getAllTables() {
         return await prisma.table.findMany({
         where: { isDeleted: false }, // Filter only available tablees
         });
@@ -37,7 +37,7 @@ class TableService {
     async changeStatus(id){
         return await prisma.table.update({
             where: {id},
-            data: {tableStatus}
+            data: {tableStatus: newStatus}
         })
     }
 }

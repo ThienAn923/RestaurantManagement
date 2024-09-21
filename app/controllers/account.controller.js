@@ -34,7 +34,7 @@ class AccountController {
             const accounts = await accountService.getAllAccounts();
             res.status(200).json(accounts);
         }catch(error){
-            return next(new ApiError(500, "An error occurred while retrieving accounts"));
+            return next(new ApiError(500, error.message));
         }
     }
 

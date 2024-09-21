@@ -33,12 +33,35 @@ class DishTypeController {
     }
   }
 
-  async getAllDishType(req, res) {
+  // async getAllDishType(req, res) {
+  //   try {
+  //     const dishTypes = await dishTypeService.getAllDishTypes();
+  //     res.status(200).json(dishTypes);
+  //   } catch (error) {
+  //     res.status(500).json({ error: error.message });
+  //   }
+  // }
+
+  //testing pinia
+  async getAllDishType(req, res, next) {
     try {
-      const dishTypes = await dishTypeService.getAllDishTypes();
-      res.status(200).json(dishTypes);
+      const page = parseInt(req.query.page) || 1;
+      const limit = parseInt(req.query.limit) || 5;
+      const result = await dishTypeService.getAllDishTypes(page, limit);
+      res.status(200).json(result);
     } catch (error) {
-      res.status(500).json({ error: error.message });
+      return next(new ApiError(500, `Error retrieving dish types: ${error.message}`));
+    }
+  }
+
+  async getAllDishType(req, res, next) {
+    try {
+      const page = parseInt(req.query.page) || 1;
+      const limit = parseInt(req.query.limit) || 5;
+      const result = await dishTypeService.getAllDishTypes(page, limit);
+      res.status(200).json(result);
+    } catch (error) {
+      return next(new ApiError(500, `Error retrieving dish types: ${error.message}`));
     }
   }
 
@@ -53,7 +76,7 @@ class DishTypeController {
 
   async deleteDishType(req, res) {
     try {
-      await dishTypeService.deleteDish(req.params.id);
+      await dishTypeService.deleteDishType(req.params.id);
       res.status(204).json();
     } catch (error) {
       res.status(500).json({ error: error.message });

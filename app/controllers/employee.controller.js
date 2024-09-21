@@ -33,7 +33,7 @@ class EmployeeController {
             const employees = await employeeService.getAllEmployees();
             res.status(200).json(employees);
         } catch (error) {
-            return next(new ApiError(500, "An error occurred while retrieving employees"));
+            return next(new ApiError(500, error.message));
         }
     }
     

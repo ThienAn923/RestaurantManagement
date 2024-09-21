@@ -28,7 +28,7 @@ class ImportInvoiceController {
             const importInvoices = await importInvoiceService.getAllImportInvoices();
             res.status(200).json(importInvoices);
         } catch (error) {
-            return next(new ApiError(500, "An error occurred while retrieving import invoices"));
+            return next(new ApiError(500, error.message));
         }
     }
 }

@@ -11,10 +11,9 @@ class AccountService {
     });
   }
 
-  async getAllAccount() {
+  async getAllAccounts() {
     return await prisma.account.findMany({
       where: { isDeleted: false },
-      include: { costs: true },
     });
   }
 

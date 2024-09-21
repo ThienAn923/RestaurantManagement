@@ -1,4 +1,4 @@
-const prisma = require('../../prisma/provider');
+const prisma = require('../../prisma/client');
 
 class ProviderService {
     async createProvider(data) {

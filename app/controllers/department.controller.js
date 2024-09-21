@@ -11,7 +11,7 @@ class DepartmentController {
             res.status(201).json(department);
         } catch (error) {
             console.log('Error detected:', error);
-            return next(new ApiError(500, "An error occurred while creating department"));
+            return next(new ApiError(500, error.message));
         }
     }
 
@@ -32,7 +32,7 @@ class DepartmentController {
             const departments = await departmentService.getAllDepartments();
             res.status(200).json(departments);
         } catch (error) {
-            return next(new ApiError(500, "An error occurred while retrieving departments"));
+            return next(new ApiError(500, error.message));
         }
     }
 

@@ -89,7 +89,7 @@ class InvoiceService {
 
     async getAllInvoices() {
         return await prisma.invoice.findMany({
-            where: { isDeleted: false },
+            
         });
     }
 

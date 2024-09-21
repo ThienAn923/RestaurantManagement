@@ -33,7 +33,7 @@ class ClientController {
             const clients = await clientService.getAllClients();
             res.status(200).json(clients);
         } catch (error) {
-            return next(new ApiError(500, "An error occurred while retrieving clients"));
+            return next(new ApiError(500, error.message));
         }
     }
     

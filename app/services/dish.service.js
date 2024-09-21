@@ -3,19 +3,21 @@ const prisma = require('../../prisma/client'); // Go up two directories from 'se
 
 class DishService {
   async createDish(data) {
-    const { DishName, DishDescription, imageLinks, Cost, DishType, ingredients } = data;
+    
+    const { DishName, DishDescription, imageLinks, Cost, DishType } = data;
     const dish = await prisma.dish.create({
       data: {
-        DishName,
-        DishDescription,
+        name: DishName,
+        description: DishDescription,
+        available: true,
         dishType: DishType,
-      
+        isDeleted: false,
       },
     });
 
     const cost = await prisma.cost.create({ 
       data: {
-        Cost,
+        cost: Cost,
         dishId: dish.id,
       },
     });
@@ -34,14 +36,14 @@ class DishService {
         });
     }
 
-    for (const ingredientId of ingredients) {
-      await prisma.dishIngredient.create({
-        data: {
-          dishId: dish.id,
-          ingredientId,
-        },
-      });
-    }
+    // for (const ingredientId of ingredients) {
+    //   await prisma.dishIngredient.create({
+    //     data: {
+    //       dishId: dish.id,
+    //       ingredientId,
+    //     },
+    //   });
+    // }
 
     return dish;
 
@@ -53,9 +55,9 @@ class DishService {
       include: { 
         costs: true,
         images: true,
-        dishIngredients: {
-          include: { ingredient: true },
-        },
+        // dishIngredients: {
+        //   include: { ingredient: true },
+        // },
       },
     });
   }
@@ -66,21 +68,23 @@ class DishService {
       include: { 
         costs: true,
         images: true,
-        dishIngredients: {
-          include: { ingredient: true },
-        },
+        // dishIngredients: {
+        //   include: { ingredient: true },
+        // },
       }, // Optionally include costs
     });
   }
 
   async updateDish(id, data) {
-    const { DishName, DishDescription, imageLinks, Cost, DishType, ingredients } = data;
+    const { DishName, DishDescription, imageLinks, Cost, DishType, } = data;
     const dish = await prisma.dish.update({
       where: { id },
       data: {
-        DishName,
-        DishDescription,
+        name: DishName,
+        description: DishDescription,
+        available: true,
         dishType: DishType,
+        isDeleted: false,
       },
     });
 
@@ -101,14 +105,14 @@ class DishService {
     }
 
     // Update ingredients
-    for (const ingredientId of ingredients) {
-      await prisma.dishIngredient.create({
-        data: {
-          dishId: dish.id,
-          ingredientId,
-        },
-      });
-    }
+    // for (const ingredientId of ingredients) {
+    //   await prisma.dishIngredient.create({
+    //     data: {
+    //       dishId: dish.id,
+    //       ingredientId,
+    //     },
+    //   });
+    // }
 
     return dish;
   }
@@ -124,7 +128,7 @@ class DishService {
   async getIngredientsByDishId(dishId) {
     return await prisma.dishIngredient.findMany({
       where: { dishId },
-      include: { ingredient: true },
+      // include: { ingredient: true },
     });
   }
 }

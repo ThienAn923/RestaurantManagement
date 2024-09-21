@@ -5,9 +5,6 @@ const MongoDB = require("../utils/mongodb.util");
 
 class DishController {
   async createDish(req, res, next) {
-  if (!req.body?.name) {
-    return next(new ApiError(400, "Name cannot be empty"));
-  }
 
   try {
     const dish = await DishService.createDish(req.body);
@@ -15,7 +12,7 @@ class DishController {
   } catch (error) {
     console.log('Error detected:', error);
 
-    return next(new ApiError(500, "An error occurred while creating dish"));
+    return next(new ApiError(500, error.message));
   }
 }
 

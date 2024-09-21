@@ -13,10 +13,32 @@ class DishTypeService {
     });
   }
 
-  async getAllDishTypes() {
-    return await prisma.DishType.findMany({
-      where: { isDeleted: false },
-    });
+  // async getAllDishTypes() {
+  //   return await prisma.DishType.findMany({
+  //     where: { isDeleted: false },
+  //   });
+  // }
+
+  //testing pinia
+  async getAllDishTypes(page = 1, limit = 5) {
+    const skip = (page - 1) * limit;
+    const [dishTypes, total] = await Promise.all([
+      prisma.DishType.findMany({
+        where: { isDeleted: false },
+        skip,
+        take: limit,
+        orderBy: { DishTypeName: 'asc' },
+      }),
+      prisma.DishType.count({ where: { isDeleted: false } }),
+    ]);
+
+    return {
+      dishTypes,
+      total,
+      page,
+      limit,
+      totalPages: Math.ceil(total / limit),
+    };
   }
 
   async updateDishType(id, data) {

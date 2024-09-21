@@ -28,7 +28,7 @@ class InvoiceController {
             const invoices = await invoiceService.getAllInvoices();
             res.status(200).json(invoices);
         } catch (error) {
-            return next(new ApiError(500, "An error occurred while retrieving invoices"));
+            return next(new ApiError(500, error.message));
         }
     }
 }

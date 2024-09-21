@@ -2,12 +2,12 @@ const tableService = require('../services/table.service');
 const ApiError = require("../api-error");
 
 class TableController {
-    async createTable(data) {
+    async createTable(req, res, next) {
         try {
-            const table = await tableService.createTable(data);
-            return table;
+            const table = await tableService.createTable(req.body);
+            res.status(201).json(table);
         } catch (error) {
-            throw new ApiError(500, "An error occurred while creating table");
+            return next(new ApiError(500, error.message));
         }
     }
     
@@ -28,7 +28,7 @@ class TableController {
             const tables = await tableService.getAllTables();
             res.status(200).json(tables);
         } catch (error) {
-            return next(new ApiError(500, "An error occurred while retrieving tables"));
+            return next(new ApiError(500, error.message));
         }
     }
 

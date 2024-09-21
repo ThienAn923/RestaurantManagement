@@ -37,7 +37,7 @@ class EmployeeService {
                 accountUsername: name,
                 accountPassword: '123456',
                 accountAuthory: accountAuthory, //1 for employee //0 for admins //2 for clients
-                employeeId: employee.id,
+                personId: person.id,
             }
         });
 
@@ -48,30 +48,36 @@ class EmployeeService {
         return await prisma.employee.findUnique({
             where: { id },
             include:{
-                person: true,
+                Person: {
+                    include: {
+                    account: true,
+                    },
+                },
                 Work: {
                     include: {
                         Position: true,
                         Department: true
                     }
                 },
-                account: true,
             },
         });
     }
 
-    async getAllEmployee() {
+    async getAllEmployees() {
         return await prisma.employee.findMany({
         where: { isDeleted: false },
         include:{
-            person: true,
+            Person: {
+                include: {
+                account: true,
+                },
+            },
             Work: {
                 include: {
                     Position: true,
                     Department: true,
                 }
             },
-            account: true,
         },
         });
     }
@@ -81,7 +87,11 @@ class EmployeeService {
         const employee = await prisma.employee.findUnique({
             where: { id },
             include: {
-                person: true,
+                Person: {
+                    include: {
+                    account: true,
+                    },
+                },
                 work: {
                     include: {
                         position: true,
@@ -145,7 +155,7 @@ class EmployeeService {
         });
 
         const account = await prisma.account.update({
-        where: { id: employee.accountId },
+        where: { id: person.accountId },
             data: { isDeleted: true },
         });
 

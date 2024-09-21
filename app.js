@@ -16,6 +16,7 @@ const positionRouter = require('./app/route/position.route');
 const promotionRouter = require('./app/route/promotion.route');
 const tableRouter = require('./app/route/table.route');
 const login = require('./app/route/login.route');
+const providerRouter = require('./app/route/provider.route');
 
 const ApiError = require("./app/api-error");
 
@@ -58,6 +59,8 @@ app.use("/api/position", positionRouter);
 app.use("/api/promotion", promotionRouter);
 
 app.use("/api/table", tableRouter);
+
+app.use("/api/provider", providerRouter);
 
 
 

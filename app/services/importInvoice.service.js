@@ -45,11 +45,10 @@ class ImportInvoiceService {
 
     async getAllImportInvoices() {
         return await prisma.importInvoice.findMany({
-            where: { isDeleted: false },
             include: {
-                importInvoiceDetails: true,
-                provider: true,
-                employee: true,
+                importInvoiceDetail: true,
+                Provider: true,
+                Employee: true,
             },
         });
     }

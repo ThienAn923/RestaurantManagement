@@ -42,11 +42,11 @@ class ClientService {
         });
     }
 
-    async getAllClient() {
+    async getAllClients() {
         return await prisma.client.findMany({
         where: { isDeleted: false },
         include:{
-            person: true,
+            Person: true,
             account: true,
         },
         });

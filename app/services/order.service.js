@@ -15,7 +15,6 @@ class OrderService {
 
     async getAllOrders() {
         return await prisma.Order.findMany({
-        where: { isDeleted: false },
         });
     }
 

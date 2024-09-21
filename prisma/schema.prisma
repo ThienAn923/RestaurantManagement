@@ -7,6 +7,9 @@ generator client {
   provider = "prisma-client-js"
 }
 
+//the dish model haven't got ingredient yet, need to add it later
+//Wrong relationship, should be many to many with ingredient, need to fix later
+//Which mean we need another model to store the relationship between dish and ingredient
 model Dish {
   id          String  @id @default(auto()) @map("_id") @db.ObjectId
   name        String
@@ -21,12 +24,12 @@ model Dish {
   DishType           DishType             @relation(fields: [dishType], references: [id])
   PromotionAfterDish PromotionAfterDish[]
   invoiceDetail      invoiceDetail[]
-  Picture            Picture[]
+  images             Image[]
   comment            comment[]
   Rating             Rating[]
 }
 
-model Picture {
+model Image {
   id     String @id @default(auto()) @map("_id") @db.ObjectId
   Link   String
   dishId String @db.ObjectId
@@ -37,7 +40,7 @@ model Picture {
 model Cost {
   id         String   @id @default(auto()) @map("_id") @db.ObjectId
   dishId     String   @db.ObjectId
-  cost       Float
+  cost       Int
   timeChange DateTime @default(now())
 
   dish Dish @relation(fields: [dishId], references: [id])
@@ -76,7 +79,7 @@ model OrderDetail {
 
 model Table {
   id          String  @id @default(auto()) @map("_id") @db.ObjectId
-  tableNumber Int
+  tableNumber Int     @unique
   tableStatus Boolean @default(true)
   seatNumber  Int
   isDeleted   Boolean @default(true)
@@ -98,9 +101,10 @@ model Booking {
 }
 
 model Client {
-  id       String @id @default(auto()) @map("_id") @db.ObjectId
-  point    Int
-  personId String @unique
+  id        String  @id @default(auto()) @map("_id") @db.ObjectId
+  point     Int
+  personId  String  @unique
+  isDeleted Boolean @default(false)
 
   Booking      Booking[]
   Person       Person[] //Hold on, does this mean client content person, which... sound weird, need to rethink?
@@ -115,6 +119,7 @@ model Person {
   id             String    @id @default(auto()) @map("_id") @db.ObjectId
   name           String
   profilePicture String?
+  isDeleted      Boolean   @default(false)
   employee       Employee? @relation(fields: [employeeId], references: [id])
   employeeId     String?   @db.ObjectId
   client         Client?   @relation(fields: [clientId], references: [id])
@@ -129,10 +134,12 @@ model Employee {
   employeeDateOfBirth DateTime
   personId            String
   orders              Order[] //currently made 0->many order
+  isDeleted           Boolean  @default(false)
 
   Person        Person[]
   Work          Work[]
   FeedbackReply FeedbackReply[]
+  importInvoice importInvoice[]
 }
 
 model account {
@@ -142,6 +149,7 @@ model account {
   AccountAuthority Int
   AccountAvatar    String?
   personId         String  @db.ObjectId
+  isDeleted        Boolean @default(false)
 
   Person Person @relation(fields: [personId], references: [id])
 }
@@ -151,6 +159,7 @@ model Department {
   id                    String  @id @default(auto()) @map("_id") @db.ObjectId
   departmentName        String
   departmentDescription String?
+  isDeleted             Boolean @default(false)
   Work                  Work[]
 }
 
@@ -158,6 +167,7 @@ model Position {
   id                  String  @id @default(auto()) @map("_id") @db.ObjectId
   positionName        String
   positionDescription String?
+  isDeleted           Boolean @default(false)
   Work                Work[]
 }
 
@@ -247,20 +257,23 @@ model Payment {
 
 //This space is for payment by cash and card
 
-//ingrediant stuff
-model ingrediant {
+//ingredient stuff
+model ingredient {
   id                  String                @id @default(auto()) @map("_id") @db.ObjectId
-  ingrediantID        String
-  ingrediantName      String
+  ingredientID        String
+  ingredientName      String
   isDeleted           Boolean               @default(false)
+  ingredientTypeID    String                @db.ObjectId
   importInvoiceDetail importInvoiceDetail[]
+  IngredientType      ingredientType        @relation(fields: [ingredientTypeID], references: [id])
 }
 
-model ingrediantType {
-  id                 String  @id @default(auto()) @map("_id") @db.ObjectId
-  ingrediantTypeID   String
-  ingrediantTypeName String
-  isDeleted          Boolean @default(false)
+model ingredientType {
+  id                 String       @id @default(auto()) @map("_id") @db.ObjectId
+  ingredientTypeID   String
+  ingredientTypeName String
+  isDeleted          Boolean      @default(false)
+  ingredient         ingredient[]
 }
 
 model Provider {
@@ -277,20 +290,22 @@ model importInvoice {
   importDate      DateTime
   totalExpense    Float
   providerID      String   @db.ObjectId
+  employeeID      String   @db.ObjectId
 
   Provider            Provider              @relation(fields: [providerID], references: [id])
   importInvoiceDetail importInvoiceDetail[]
+  Employee            Employee              @relation(fields: [employeeID], references: [id])
 }
 
 model importInvoiceDetail {
   id              String @id @default(auto()) @map("_id") @db.ObjectId
   importInvoiceID String @db.ObjectId
-  ingrediantID    String @db.ObjectId
+  ingredientID    String @db.ObjectId
   quantity        Int
   totalExpense    Float
 
   ImportInvoice importInvoice @relation(fields: [importInvoiceID], references: [id])
-  Ingrediant    ingrediant    @relation(fields: [ingrediantID], references: [id])
+  ingredient    ingredient    @relation(fields: [ingredientID], references: [id])
 }
 
 //client side stuff that i dont know if i would use it or not
