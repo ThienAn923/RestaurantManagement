@@ -86,6 +86,7 @@ model Table {
 
   Booking Booking[]
   Order   Order[]
+  Invoice Invoice[]
 }
 
 model Booking {
@@ -140,6 +141,7 @@ model Employee {
   Work          Work[]
   FeedbackReply FeedbackReply[]
   importInvoice importInvoice[]
+  Invoice       Invoice[]
 }
 
 model account {
@@ -229,6 +231,8 @@ model Invoice {
   promotionID String?  @db.ObjectId
 
   PromotionAfterInvoice PromotionAfterInvoice? @relation(fields: [promotionID], references: [id])
+  Employee              Employee               @relation(fields: [employeeID], references: [id])
+  Table                 Table                  @relation(fields: [tableID], references: [id])
   invoiceDetail         invoiceDetail[]
   Payment               Payment[]
 }
@@ -238,7 +242,7 @@ model invoiceDetail {
   invoiceID String @db.ObjectId
   dishID    String @db.ObjectId
   quantity  Int
-  totalCost Float
+  totalCost Int
 
   Invoice Invoice @relation(fields: [invoiceID], references: [id])
   Dish    Dish    @relation(fields: [dishID], references: [id])
@@ -260,33 +264,33 @@ model Payment {
 //ingredient stuff
 model ingredient {
   id                  String                @id @default(auto()) @map("_id") @db.ObjectId
-  ingredientID        String
   ingredientName      String
   isDeleted           Boolean               @default(false)
   ingredientTypeID    String                @db.ObjectId
   importInvoiceDetail importInvoiceDetail[]
-  IngredientType      ingredientType        @relation(fields: [ingredientTypeID], references: [id])
+  ingredientType      ingredientType        @relation(fields: [ingredientTypeID], references: [id])
 }
 
 model ingredientType {
-  id                 String       @id @default(auto()) @map("_id") @db.ObjectId
-  ingredientTypeID   String
-  ingredientTypeName String
-  isDeleted          Boolean      @default(false)
-  ingredient         ingredient[]
+  id                        String       @id @default(auto()) @map("_id") @db.ObjectId
+  ingredientTypeName        String
+  ingredientTypeDescription String?
+  isDeleted                 Boolean      @default(false)
+  ingredient                ingredient[]
 }
 
 model Provider {
-  id            String          @id @default(auto()) @map("_id") @db.ObjectId
-  providerID    String
-  providerName  String
-  isDeleted     Boolean         @default(false)
-  importInvoice importInvoice[]
+  id String @id @default(auto()) @map("_id") @db.ObjectId
+
+  providerName        String
+  providerDescription String?
+  isDeleted           Boolean         @default(false)
+  importInvoice       importInvoice[]
 }
 
 model importInvoice {
   id              String   @id @default(auto()) @map("_id") @db.ObjectId
-  importInvoiceID String
+  importInvoiceID String   @db.ObjectId
   importDate      DateTime
   totalExpense    Float
   providerID      String   @db.ObjectId
@@ -312,7 +316,6 @@ model importInvoiceDetail {
 
 model Voucher {
   id                 String  @id @default(auto()) @map("_id") @db.ObjectId
-  voucherID          String
   voucherName        String
   voucherPercentage  Float
   voucherDescription String?
@@ -323,7 +326,6 @@ model Voucher {
 
 model voucherUnit {
   id                  String   @id @default(auto()) @map("_id") @db.ObjectId
-  voucherUnitID       String
   voucherUnitCode     String
   voucherReceivedDate DateTime
   voucherExpiredDate  DateTime
@@ -337,7 +339,6 @@ model voucherUnit {
 
 model gift {
   id              String  @id @default(auto()) @map("_id") @db.ObjectId
-  giftID          String
   giftName        String
   giftQuantity    Int
   giftImage       String

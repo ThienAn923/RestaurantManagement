@@ -2,12 +2,12 @@ const providerService = require('../services/provider.service');
 const ApiError = require("../api-error");
 
 class ProviderController {
-    async createProvider(data) {
+    async createProvider(req, res, next) {
         try {
-            const provider = await providerService.createProvider(data);
-            return provider;
+            const provider = await providerService.createProvider(req.body);
+            res.status(201).json(provider);
         } catch (error) {
-            throw new ApiError(500, "An error occurred while creating provider");
+            throw new ApiError(500, error.message);
         }
     }
     
@@ -25,10 +25,12 @@ class ProviderController {
     
     async getAllProviders(req, res, next) {
         try {
-            const providers = await providerService.getAllProviders();
+            const page = parseInt(req.query.page) || 1;
+            const limit = parseInt(req.query.limit) || 5;
+            const providers = await providerService.getAllProviders(page, limit);
             res.status(200).json(providers);
         } catch (error) {
-            return next(new ApiError(500, "An error occurred while retrieving providers"));
+            return next(new ApiError(500, error.message));
         }
     }
 

@@ -12,10 +12,32 @@ class IngredientTypeService {
         });
     }
 
-    async getAllIngredientTypes() {
+    async getAllIngredientTypesVIP() {
         return await prisma.ingredientType.findMany({
             where: { isDeleted: false },
         });
+    }
+
+    //pinia
+    async getAllIngredientTypes(page = 1, limit = 5) {
+        const skip = (page - 1) * limit;
+        const [ingredientTypes, total] = await Promise.all([
+        prisma.ingredientType.findMany({
+            where: { isDeleted: false },
+            skip,
+            take: limit,
+            orderBy: { ingredientTypeName: 'asc' },
+        }),
+        prisma.ingredientType.count({ where: { isDeleted: false } }),
+        ]);
+    
+        return {
+        ingredientTypes,
+        total,
+        page,
+        limit,
+        totalPages: Math.ceil(total / limit),
+        };
     }
 
     async updateIngredientType(id, data) {

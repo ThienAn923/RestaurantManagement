@@ -27,12 +27,24 @@ class PositionController {
         }
     }
 
+    // async getAllPositions(req, res, next) {
+    //     try {
+    //         const positions = await positionService.getAllPositions();
+    //         res.status(200).json(positions);
+    //     } catch (error) {
+    //         return next(new ApiError(500, "An error occurred while retrieving positions"));
+    //     }
+    // }
+
+    // pinia
     async getAllPositions(req, res, next) {
         try {
-            const positions = await positionService.getAllPositions();
+            const page = parseInt(req.query.page) || 1;
+            const limit = parseInt(req.query.limit) || 5;
+            const positions = await positionService.getAllPositions(page, limit);
             res.status(200).json(positions);
         } catch (error) {
-            return next(new ApiError(500, "An error occurred while retrieving positions"));
+            return next(new ApiError(500, error.message));
         }
     }
 
@@ -41,7 +53,7 @@ class PositionController {
             const updatedPosition = await positionService.updatePosition(req.params.id, req.body);
             res.status(200).json(updatedPosition);
         } catch (error) {
-            return next(new ApiError(500, "An error occurred while updating position"));
+            return next(new ApiError(500, error.message));
         }
     }
 

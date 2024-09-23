@@ -87,11 +87,67 @@ class InvoiceService {
         });
     }
 
-    async getAllInvoices() {
+    async getAllInvoicesVIP() {
         return await prisma.invoice.findMany({
             
         });
     }
+
+    async getAllInvoices(page = 1, limit = 5) {
+        const skip = (page - 1) * limit;
+        const [invoices, total] = await Promise.all([
+        prisma.invoice.findMany({
+            skip,
+            take: limit,
+            orderBy: {
+            invoiceDate: 'desc'
+            },
+            include: {
+            PromotionAfterInvoice: true,
+            Employee: {
+                include: {
+                    Person: true
+                }
+            },
+            Table: true,
+            invoiceDetail: {
+                include: {
+                    Dish: true
+                }
+            }
+            }
+        }),
+        prisma.invoice.count()
+        ]);
+
+        const formattedInvoices = invoices.map(invoice => ({
+        id: invoice.id,
+        invoiceDate: invoice.invoiceDate,
+        totalCost: invoice.totalCost,
+        orderNote: invoice.orderNote,
+        employeeID: invoice.employeeID,
+        employeeName: invoice.Employee.Person.name,
+        tableID: invoice.tableID,
+        tableNumber: invoice.Table.tableNumber,
+        promotionID: invoice.promotionID,
+        promotionName: invoice.PromotionAfterInvoice?.Promotion.promotionName,
+        invoiceDetails: invoice.invoiceDetail.map(detail => ({
+            id: detail.id,
+            dishName: detail.Dish.name,
+            quantity: detail.quantity,
+            totalCost: detail.totalCost
+        }))
+    }));
+
+        return {
+        invoices : formattedInvoices,
+        total,
+        page,
+        limit,
+        totalPages: Math.ceil(total / limit),
+        };
+    }
+
 
     async getTableAfterInvoice(invoiceId){
         const invoice = await prisma.invoice.findUnique({

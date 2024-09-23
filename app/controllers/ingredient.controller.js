@@ -2,12 +2,12 @@ const ingredientService = require('../services/ingredient.service');
 const ApiError = require("../api-error");
 
 class IngredientController {
-    async createIngredient(data) {
+    async createIngredient(req, res, next) {
         try {
-            const ingredient = await ingredientService.createIngredient(data);
+            const ingredient = await ingredientService.createIngredient(req.body);
             return ingredient;
         } catch (error) {
-            throw new ApiError(500, "An error occurred while creating ingredient");
+            throw new ApiError(500, error.message);
         }
     }
     
@@ -25,10 +25,12 @@ class IngredientController {
     
     async getAllIngredients(req, res, next) {
         try {
-            const ingredients = await ingredientService.getAllIngredients();
-            res.status(200).json(ingredients);
+            const page = parseInt(req.query.page) || 1;
+            const limit = parseInt(req.query.limit) || 5;
+            const result = await ingredientService.getAllIngredients(page, limit);
+            res.status(200).json(result);
         } catch (error) {
-            return next(new ApiError(500, "An error occurred while retrieving ingredients"));
+            return next(new ApiError(500, error.message));
         }
     }
 
@@ -40,7 +42,7 @@ class IngredientController {
             }
             res.status(200).json(ingredient);
         } catch (error) {
-            return next(new ApiError(500, "An error occurred while updating ingredient"));
+            return next(new ApiError(500, error.message));
         }
     }
 

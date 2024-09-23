@@ -63,7 +63,7 @@ class EmployeeService {
         });
     }
 
-    async getAllEmployees() {
+    async getAllEmployeesVIP() {
         return await prisma.employee.findMany({
         where: { isDeleted: false },
         include:{
@@ -80,6 +80,41 @@ class EmployeeService {
             },
         },
         });
+    }
+
+    
+    async getAllEmployees(page = 1, limit = 5) {
+        const skip = (page - 1) * limit
+        const [employees, total] = await Promise.all([
+        prisma.employee.findMany({
+            where: { isDeleted: false },
+            include: {
+            Person: {
+                include: {
+                account: true,
+                },
+            },
+            Work: {
+                include: {
+                Position: true,
+                Department: true,
+                },
+            },
+            },
+            skip,
+            take: limit,
+        }),
+        prisma.employee.count({ where: { isDeleted: false } }),
+    ])
+
+    return {
+      employees,
+      total,
+      page: parseInt(page),
+      limit: parseInt(limit),
+      totalPages: Math.ceil(total / limit),
+      
+    }
     }
 
     async updateEmployee(id, data) {

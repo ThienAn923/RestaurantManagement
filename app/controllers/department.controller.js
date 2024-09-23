@@ -29,7 +29,9 @@ class DepartmentController {
 
     async getAllDepartments(req, res, next) {
         try {
-            const departments = await departmentService.getAllDepartments();
+            const page = parseInt(req.query.page) || 1;
+            const limit = parseInt(req.query.limit) || 5;
+            const departments = await departmentService.getAllDepartments(page, limit);
             res.status(200).json(departments);
         } catch (error) {
             return next(new ApiError(500, error.message));

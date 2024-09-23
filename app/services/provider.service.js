@@ -2,6 +2,7 @@ const prisma = require('../../prisma/client');
 
 class ProviderService {
     async createProvider(data) {
+        console.log({data: data});
         return await prisma.provider.create({ data });
     }
 
@@ -11,10 +12,32 @@ class ProviderService {
         });
     }
 
-    async getAllProviders() {
-        return await prisma.provider.findMany({
+    // async getAllProviders() {
+    //     return await prisma.provider.findMany({
+    //         where: { isDeleted: false },
+    //     });
+    // }
+
+    //pinia
+    async getAllProviders(page = 1, limit = 5) {
+        const skip = (page - 1) * limit;
+        const [providers, total] = await Promise.all([
+        prisma.Provider.findMany({
             where: { isDeleted: false },
-        });
+            skip,
+            take: limit,
+            orderBy: { providerName: 'asc' },
+        }),
+        prisma.Provider.count({ where: { isDeleted: false } }),
+        ]);
+    
+        return {
+        providers,
+        total,
+        page,
+        limit,
+        totalPages: Math.ceil(total / limit),
+        };
     }
 
     async updateProvider(id, data) {

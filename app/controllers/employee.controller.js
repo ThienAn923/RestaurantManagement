@@ -30,8 +30,9 @@ class EmployeeController {
     
     async getAllEmployees(req, res, next) {
         try {
-            const employees = await employeeService.getAllEmployees();
-            res.status(200).json(employees);
+            const { page = 1, limit = 5 } = req.query
+            const result = await employeeService.getAllEmployees(parseInt(page), parseInt(limit))
+            res.status(200).json(result)
         } catch (error) {
             return next(new ApiError(500, error.message));
         }

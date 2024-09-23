@@ -13,10 +13,32 @@ class DepartmentService {
         });
     }
     
-    async getAllDepartments() {
-        return await prisma.Department.findMany({
-        where: { isDeleted: false },
-        });
+    // async getAllDepartments() {
+    //     return await prisma.Department.findMany({
+    //     where: { isDeleted: false },
+    //     });
+    // }
+
+    //pinia
+    async getAllDepartments(page = 1, limit = 5) {
+        const skip = (page - 1) * limit;
+        const [departments, total] = await Promise.all([
+        prisma.Department.findMany({
+            where: { isDeleted: false },
+            skip,
+            take: limit,
+            orderBy: { departmentName: 'asc' },
+        }),
+        prisma.Department.count({ where: { isDeleted: false } }),
+        ]);
+    
+        return {
+        departments,
+        total,
+        page,
+        limit,
+        totalPages: Math.ceil(total / limit),
+        };
     }
     
     async updateDepartment(id, data) {

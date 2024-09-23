@@ -2,9 +2,9 @@ const invoiceService = require('../services/invoice.service');
 const ApiError = require("../api-error");
 
 class InvoiceController {
-    async createInvoice(data) {
+    async createInvoice(req, res, next) {
         try {
-            const invoice = await invoiceService.createInvoice(data);
+            const invoice = await invoiceService.createInvoice(req.body);
             return invoice;
         } catch (error) {
             throw new ApiError(500, "An error occurred while creating invoice");
