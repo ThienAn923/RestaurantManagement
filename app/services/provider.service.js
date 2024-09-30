@@ -74,6 +74,7 @@ class ProviderService {
         ]);
 
         // Custom sorting for providerStatus
+        // INCOMPLETE:
         if (sortColumn === 'providerStatus') {
             const statusOrder = ['Very Important', 'Important', 'Normal', 'Potential'];
             providers.sort((a, b) => {
