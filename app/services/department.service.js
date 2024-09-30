@@ -20,27 +20,58 @@ class DepartmentService {
     // }
 
     //pinia
-    async getAllDepartments(page = 1, limit = 5) {
+    // async getAllDepartments(page = 1, limit = 5) {
+    //     const skip = (page - 1) * limit;
+    //     const [departments, total] = await Promise.all([
+    //     prisma.Department.findMany({
+    //         where: { isDeleted: false },
+    //         skip,
+    //         take: limit,
+    //         orderBy: { createAt: 'desc' },
+    //     }),
+    //     prisma.Department.count({ where: { isDeleted: false } }),
+    //     ]);
+    
+    //     return {
+    //     departments,
+    //     total,
+    //     page,
+    //     limit,
+    //     totalPages: Math.ceil(total / limit),
+    //     };
+    // }
+    
+    //pinia with sort
+    async getAllDepartments(page = 1, limit = 5, sortColumn, sortOrder) {
         const skip = (page - 1) * limit;
+        const allowedSortColumns = ['departmentName', 'totalEmployee', 'headOfDepartment', 'createAt'];
+        
+        // Ensure sortColumn is valid
+        if (!allowedSortColumns.includes(sortColumn)) {
+            sortColumn = 'createAt';
+        }
+
+        // Ensure sortOrder is valid
+        sortOrder = sortOrder.toLowerCase() === 'asc' ? 'asc' : 'desc';
+        console.log(sortColumn, sortOrder);
         const [departments, total] = await Promise.all([
-        prisma.Department.findMany({
+            prisma.Department.findMany({
             where: { isDeleted: false },
             skip,
             take: limit,
-            orderBy: { departmentName: 'asc' },
-        }),
-        prisma.Department.count({ where: { isDeleted: false } }),
+            orderBy: { [sortColumn]: sortOrder },
+            }),
+            prisma.Department.count({ where: { isDeleted: false } }),
         ]);
-    
+
         return {
-        departments,
-        total,
-        page,
-        limit,
-        totalPages: Math.ceil(total / limit),
+            departments,
+            total,
+            page,
+            limit,
+            totalPages: Math.ceil(total / limit),
         };
-    }
-    
+        }
     async updateDepartment(id, data) {
         return await prisma.Department.update({
         where: { id },

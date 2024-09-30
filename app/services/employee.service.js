@@ -1,7 +1,7 @@
 const prisma = require('../../prisma/client');
 
 class EmployeeService {
-    async createEmlpoyee(data) {
+    async createEmployee(data) {
         //profilePicture should be default by the "default avatar link"
         const { name, profilePicture, employeeAdress, employeeGender, employeeDateOfBirth, positionId, departmentId, accountAuthory } = data;
     

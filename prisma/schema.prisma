@@ -7,16 +7,15 @@ generator client {
   provider = "prisma-client-js"
 }
 
-//the dish model haven't got ingredient yet, need to add it later
-//Wrong relationship, should be many to many with ingredient, need to fix later
-//Which mean we need another model to store the relationship between dish and ingredient
 model Dish {
-  id          String  @id @default(auto()) @map("_id") @db.ObjectId
+  id          String   @id @default(auto()) @map("_id") @db.ObjectId
   name        String
   description String
-  available   Boolean @default(true)
-  dishType    String  @db.ObjectId
-  isDeleted   Boolean @default(false)
+  available   Boolean  @default(true)
+  dishType    String   @db.ObjectId
+  isDeleted   Boolean  @default(false)
+  updateAt    DateTime @updatedAt
+  createAt    DateTime @default(now())
 
   costs        Cost[]
   orderDetails OrderDetail[]
@@ -30,37 +29,44 @@ model Dish {
 }
 
 model Image {
-  id     String @id @default(auto()) @map("_id") @db.ObjectId
-  Link   String
-  dishId String @db.ObjectId
+  id       String   @id @default(auto()) @map("_id") @db.ObjectId
+  Link     String
+  dishId   String   @db.ObjectId
+  updateAt DateTime @updatedAt
+  createAt DateTime @default(now())
 
   Dish Dish @relation(fields: [dishId], references: [id])
 }
 
 model Cost {
-  id         String   @id @default(auto()) @map("_id") @db.ObjectId
-  dishId     String   @db.ObjectId
-  cost       Int
-  timeChange DateTime @default(now())
+  id       String   @id @default(auto()) @map("_id") @db.ObjectId
+  dishId   String   @db.ObjectId
+  cost     Int
+  createAt DateTime @default(now())
 
   dish Dish @relation(fields: [dishId], references: [id])
 }
 
 model DishType {
-  id                  String  @id @default(auto()) @map("_id") @db.ObjectId
+  id                  String   @id @default(auto()) @map("_id") @db.ObjectId
   DishTypeName        String
   DishTypeDescription String
-  isDeleted           Boolean @default(false)
+  DishTypeAvailable   Boolean  @default(true)
+  isDeleted           Boolean  @default(false)
+  updateAt            DateTime @updatedAt
+  createAt            DateTime @default(now())
 
   dish_list Dish[]
 }
 
 model Order {
-  id          String  @id @default(auto()) @map("_id") @db.ObjectId
-  orderStatus Boolean @default(true)
-  employeeID  String  @db.ObjectId
+  id          String   @id @default(auto()) @map("_id") @db.ObjectId
+  orderStatus Boolean  @default(true)
+  employeeID  String   @db.ObjectId
   orderNote   String
-  tableID     String? @unique @db.ObjectId
+  tableID     String?  @unique @db.ObjectId
+  updateAt    DateTime @updatedAt
+  createAt    DateTime @default(now())
 
   Employee    Employee      @relation(fields: [employeeID], references: [id])
   Table       Table?        @relation(fields: [tableID], references: [id])
@@ -68,21 +74,25 @@ model Order {
 }
 
 model OrderDetail {
-  id       String @id @default(auto()) @map("_id") @db.ObjectId
-  dishId   String @db.ObjectId
+  id       String   @id @default(auto()) @map("_id") @db.ObjectId
+  dishId   String   @db.ObjectId
   quantity Int
-  orderID  String @db.ObjectId
+  orderID  String   @db.ObjectId
+  updateAt DateTime @updatedAt
+  createAt DateTime @default(now())
 
   Dish  Dish  @relation(fields: [dishId], references: [id])
   Order Order @relation(fields: [orderID], references: [id])
 }
 
 model Table {
-  id          String  @id @default(auto()) @map("_id") @db.ObjectId
-  tableNumber Int     @unique
-  tableStatus Boolean @default(true)
+  id          String   @id @default(auto()) @map("_id") @db.ObjectId
+  tableNumber Int      @unique
+  tableStatus Boolean  @default(true)
   seatNumber  Int
-  isDeleted   Boolean @default(true)
+  isDeleted   Boolean  @default(true)
+  updateAt    DateTime @updatedAt
+  createAt    DateTime @default(now())
 
   Booking Booking[]
   Order   Order[]
@@ -96,16 +106,23 @@ model Booking {
   numberOfPeople Int
   tableID        String   @db.ObjectId
   clientID       String   @db.ObjectId
+  updateAt       DateTime @updatedAt
+  createAt       DateTime @default(now())
 
   Client Client @relation(fields: [clientID], references: [id])
   Table  Table  @relation(fields: [tableID], references: [id])
 }
 
 model Client {
-  id        String  @id @default(auto()) @map("_id") @db.ObjectId
-  point     Int
-  personId  String  @unique
-  isDeleted Boolean @default(false)
+  id          String   @id @default(auto()) @map("_id") @db.ObjectId
+  point       Int
+  personId    String   @unique
+  email       String?  @unique
+  phoneNumber String?  @unique
+  gender      Boolean? @default(true)
+  isDeleted   Boolean  @default(false)
+  updateAt    DateTime @updatedAt
+  createAt    DateTime @default(now())
 
   Booking      Booking[]
   Person       Person[] //Hold on, does this mean client content person, which... sound weird, need to rethink?
@@ -114,18 +131,22 @@ model Client {
   comment      comment[]
   commentReply commentReply[]
   Rating       Rating[]
+  pointUsage   pointUsage[]
 }
 
 model Person {
-  id             String    @id @default(auto()) @map("_id") @db.ObjectId
+  id             String   @id @default(auto()) @map("_id") @db.ObjectId
   name           String
   profilePicture String?
-  isDeleted      Boolean   @default(false)
-  employee       Employee? @relation(fields: [employeeId], references: [id])
-  employeeId     String?   @db.ObjectId
-  client         Client?   @relation(fields: [clientId], references: [id])
-  clientId       String?   @db.ObjectId
-  account        account[]
+  isDeleted      Boolean  @default(false)
+  updateAt       DateTime @updatedAt
+  createAt       DateTime @default(now())
+
+  employee   Employee? @relation(fields: [employeeId], references: [id])
+  employeeId String?   @db.ObjectId
+  client     Client?   @relation(fields: [clientId], references: [id])
+  clientId   String?   @db.ObjectId
+  account    account[]
 }
 
 model Employee {
@@ -133,9 +154,14 @@ model Employee {
   employeeAdress      String
   employeeGender      Boolean  @default(true)
   employeeDateOfBirth DateTime
+  employeePhoneNumber String
+  employeeEmail       String
   personId            String
-  orders              Order[] //currently made 0->many order
-  isDeleted           Boolean  @default(false)
+
+  orders    Order[] //currently made 0->many order
+  isDeleted Boolean  @default(false)
+  updateAt  DateTime @updatedAt
+  createAt  DateTime @default(now())
 
   Person        Person[]
   Work          Work[]
@@ -145,32 +171,41 @@ model Employee {
 }
 
 model account {
-  id               String  @id @default(auto()) @map("_id") @db.ObjectId
+  id               String   @id @default(auto()) @map("_id") @db.ObjectId
   accountUsername  String
   accountPassword  String
   AccountAuthority Int
   AccountAvatar    String?
-  personId         String  @db.ObjectId
-  isDeleted        Boolean @default(false)
+  personId         String   @db.ObjectId
+  isDeleted        Boolean  @default(false)
+  updateAt         DateTime @updatedAt
+  createAt         DateTime @default(now())
 
   Person Person @relation(fields: [personId], references: [id])
 }
 
 //new
 model Department {
-  id                    String  @id @default(auto()) @map("_id") @db.ObjectId
+  id                    String    @id @default(auto()) @map("_id") @db.ObjectId
   departmentName        String
   departmentDescription String?
-  isDeleted             Boolean @default(false)
+  totalEmployee         Int
+  headOfDepartment      String?   @db.ObjectId
+  isDeleted             Boolean   @default(false)
   Work                  Work[]
+  updateAt              DateTime? @updatedAt
+  createAt              DateTime? @default(now())
 }
 
 model Position {
-  id                  String  @id @default(auto()) @map("_id") @db.ObjectId
+  id                  String   @id @default(auto()) @map("_id") @db.ObjectId
   positionName        String
   positionDescription String?
-  isDeleted           Boolean @default(false)
+  totalEmployee       Int
+  isDeleted           Boolean  @default(false)
   Work                Work[]
+  updateAt            DateTime @updatedAt
+  createAt            DateTime @default(now())
 }
 
 model Work {
@@ -181,6 +216,8 @@ model Work {
   employeeID   String    @db.ObjectId
   departmentID String    @db.ObjectId
   positionID   String    @db.ObjectId
+  updateAt     DateTime  @updatedAt
+  createAt     DateTime  @default(now())
 
   Employee   Employee   @relation(fields: [employeeID], references: [id])
   Department Department @relation(fields: [departmentID], references: [id])
@@ -188,61 +225,99 @@ model Work {
 }
 
 model Promotion {
-  id                    String                  @id @default(auto()) @map("_id") @db.ObjectId
-  promotionName         String
-  promotionDescription  String?
-  discount              Float
-  startDate             DateTime
-  endDate               DateTime
-  isDeleted             Boolean                 @default(false)
+  id                   String   @id @default(auto()) @map("_id") @db.ObjectId
+  promotionName        String
+  promotionDescription String?
+  promotionLimit       Int? //this should be the limit of promotion, if it's null, then it's unlimited for ex: 99k, 199k, 299k
+  discount             Float
+  startDate            DateTime
+  endDate              DateTime
+  isDeleted            Boolean  @default(false)
+  updateAt             DateTime @updatedAt
+  createAt             DateTime @default(now())
+
   PromotionAfterDish    PromotionAfterDish[]
   PromotionAfterInvoice PromotionAfterInvoice[]
+  PromotionToInvoice    PromotionToInvoice[]
 }
 
 model PromotionAfterDish {
-  id          String  @id @default(auto()) @map("_id") @db.ObjectId
-  promotionID String  @db.ObjectId
-  dishID      String  @db.ObjectId
-  isDeleted   Boolean @default(false)
+  id          String   @id @default(auto()) @map("_id") @db.ObjectId
+  promotionID String   @db.ObjectId
+  dishID      String   @db.ObjectId
+  isDeleted   Boolean  @default(false)
+  updateAt    DateTime @updatedAt
+  createAt    DateTime @default(now())
 
   Promotion Promotion @relation(fields: [promotionID], references: [id])
   Dish      Dish      @relation(fields: [dishID], references: [id])
 }
 
 model PromotionAfterInvoice {
-  id          String  @id @default(auto()) @map("_id") @db.ObjectId
-  promotionID String  @db.ObjectId
-  isDeleted   Boolean @default(false)
+  id          String   @id @default(auto()) @map("_id") @db.ObjectId
+  promotionID String   @db.ObjectId
+  isDeleted   Boolean  @default(false)
+  updateAt    DateTime @updatedAt
+  createAt    DateTime @default(now())
 
   Promotion Promotion @relation(fields: [promotionID], references: [id])
   Invoice   Invoice[]
+}
+
+model PromotionToInvoice {
+  id          String   @id @default(auto()) @map("_id") @db.ObjectId
+  promotionID String   @db.ObjectId
+  invoiceID   String   @db.ObjectId
+  createAt    DateTime @default(now())
+
+  Promotion Promotion @relation(fields: [promotionID], references: [id])
+  Invoice   Invoice   @relation(fields: [invoiceID], references: [id])
+}
+
+//shows history of point usage of client in each invoice
+model pointUsage {
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  pointUsed Int
+  invoiceID String   @db.ObjectId
+  clientID  String   @db.ObjectId
+  updateAt  DateTime @updatedAt
+  createAt  DateTime @default(now())
+
+  Client  Client  @relation(fields: [clientID], references: [id])
+  Invoice Invoice @relation(fields: [invoiceID], references: [id])
 }
 
 //this model only ecept 1 promotion for 1 invoice at a time
 //if you want to add more promotion for 1 invoice, another model like "promotionOfInvoice" should be created
 //to store the promotionID and invoiceID, many to many relationship
 model Invoice {
-  id          String   @id @default(auto()) @map("_id") @db.ObjectId
-  invoiceDate DateTime @default(now())
-  totalCost   Float
-  orderNote   String?
-  employeeID  String   @db.ObjectId
-  tableID     String   @db.ObjectId
-  promotionID String?  @db.ObjectId
+  id             String   @id @default(auto()) @map("_id") @db.ObjectId
+  invoiceDate    DateTime @default(now())
+  totalCost      Float
+  orderNote      String?
+  totalPromotion Int?
+  invoiceStatus  Boolean  @default(true) //true = paid, false = not paid
+  employeeID     String   @db.ObjectId
+  tableID        String   @db.ObjectId
+  promotionID    String?  @db.ObjectId
+  createAt       DateTime @default(now())
 
   PromotionAfterInvoice PromotionAfterInvoice? @relation(fields: [promotionID], references: [id])
   Employee              Employee               @relation(fields: [employeeID], references: [id])
   Table                 Table                  @relation(fields: [tableID], references: [id])
   invoiceDetail         invoiceDetail[]
   Payment               Payment[]
+  pointUsage            pointUsage[]
+  PromotionToInvoice    PromotionToInvoice[]
 }
 
 model invoiceDetail {
-  id        String @id @default(auto()) @map("_id") @db.ObjectId
-  invoiceID String @db.ObjectId
-  dishID    String @db.ObjectId
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  invoiceID String   @db.ObjectId
+  dishID    String   @db.ObjectId
   quantity  Int
   totalCost Int
+  createAt  DateTime @default(now())
 
   Invoice Invoice @relation(fields: [invoiceID], references: [id])
   Dish    Dish    @relation(fields: [dishID], references: [id])
@@ -255,6 +330,8 @@ model Payment {
   totalMoneyReturn   Float
   totalMoney         Float
   invoiceID          String   @db.ObjectId
+  updateAt           DateTime @updatedAt
+  createAt           DateTime @default(now())
 
   Invoice Invoice @relation(fields: [invoiceID], references: [id])
 }
@@ -269,6 +346,8 @@ model ingredient {
   ingredientTypeID    String                @db.ObjectId
   importInvoiceDetail importInvoiceDetail[]
   ingredientType      ingredientType        @relation(fields: [ingredientTypeID], references: [id])
+  updateAt            DateTime              @updatedAt
+  createAt            DateTime              @default(now())
 }
 
 model ingredientType {
@@ -277,6 +356,8 @@ model ingredientType {
   ingredientTypeDescription String?
   isDeleted                 Boolean      @default(false)
   ingredient                ingredient[]
+  updateAt                  DateTime     @updatedAt
+  createAt                  DateTime     @default(now())
 }
 
 model Provider {
@@ -284,17 +365,27 @@ model Provider {
 
   providerName        String
   providerDescription String?
+  providerPhoneNumber String?
+  providerEmail       String?
+  providerAddress     String?
+  providerStatus      String? //this should have default status and also give the option to custom status, that's why it's string instead of boolean or int
   isDeleted           Boolean         @default(false)
   importInvoice       importInvoice[]
+  updateAt            DateTime        @updatedAt
+  createAt            DateTime        @default(now())
 }
 
 model importInvoice {
   id              String   @id @default(auto()) @map("_id") @db.ObjectId
   importInvoiceID String   @db.ObjectId
-  importDate      DateTime
+  importDate      DateTime //aka arrival date
+  //i honestly don't know should i put these 2 status here or not
+  // invoiceStatus   Boolean  @default(true) //true = paid, false = not paid
+  // orderStatus    Boolean  @default(true) //true = ordered, false = not ordered
   totalExpense    Float
   providerID      String   @db.ObjectId
   employeeID      String   @db.ObjectId
+  createAt        DateTime @default(now())
 
   Provider            Provider              @relation(fields: [providerID], references: [id])
   importInvoiceDetail importInvoiceDetail[]
@@ -302,11 +393,12 @@ model importInvoice {
 }
 
 model importInvoiceDetail {
-  id              String @id @default(auto()) @map("_id") @db.ObjectId
-  importInvoiceID String @db.ObjectId
-  ingredientID    String @db.ObjectId
+  id              String   @id @default(auto()) @map("_id") @db.ObjectId
+  importInvoiceID String   @db.ObjectId
+  ingredientID    String   @db.ObjectId
   quantity        Int
   totalExpense    Float
+  createAt        DateTime @default(now())
 
   ImportInvoice importInvoice @relation(fields: [importInvoiceID], references: [id])
   ingredient    ingredient    @relation(fields: [ingredientID], references: [id])
@@ -315,11 +407,13 @@ model importInvoiceDetail {
 //client side stuff that i dont know if i would use it or not
 
 model Voucher {
-  id                 String  @id @default(auto()) @map("_id") @db.ObjectId
+  id                 String   @id @default(auto()) @map("_id") @db.ObjectId
   voucherName        String
   voucherPercentage  Float
   voucherDescription String?
-  isDeleted          Boolean @default(false)
+  isDeleted          Boolean  @default(false)
+  updateAt           DateTime @updatedAt
+  createAt           DateTime @default(now())
 
   voucherUnit voucherUnit[]
 }
@@ -332,19 +426,22 @@ model voucherUnit {
   clientID            String   @db.ObjectId
   voucherID           String   @db.ObjectId
   isDeleted           Boolean  @default(false)
+  createAt            DateTime @default(now())
 
   Client  Client  @relation(fields: [clientID], references: [id])
   Voucher Voucher @relation(fields: [voucherID], references: [id])
 }
 
 model gift {
-  id              String  @id @default(auto()) @map("_id") @db.ObjectId
+  id              String   @id @default(auto()) @map("_id") @db.ObjectId
   giftName        String
   giftQuantity    Int
   giftImage       String
   giftDescription String?
   pointToExchange Int
-  isDeleted       Boolean @default(false)
+  updateAt        DateTime @updatedAt
+  createAt        DateTime @default(now())
+  isDeleted       Boolean  @default(false)
 }
 
 // communitation stuff
@@ -356,6 +453,8 @@ model Feedback {
   isDeleted     Boolean         @default(false)
   FeedbackReply FeedbackReply[]
   clientID      String          @db.ObjectId
+  updateAt      DateTime        @updatedAt
+  createAt      DateTime        @default(now())
 
   Client Client @relation(fields: [clientID], references: [id])
 }
@@ -367,6 +466,8 @@ model FeedbackReply {
   replyDate  DateTime
   isDeleted  Boolean  @default(false)
   emlpoyeeID String   @db.ObjectId
+  updateAt   DateTime @updatedAt
+  createAt   DateTime @default(now())
 
   Feedback Feedback @relation(fields: [feedbackID], references: [id])
   Employee Employee @relation(fields: [emlpoyeeID], references: [id])
@@ -379,6 +480,8 @@ model comment {
   isDeleted   Boolean  @default(false)
   dishID      String   @db.ObjectId
   clientID    String   @db.ObjectId
+  updateAt    DateTime @updatedAt
+  createAt    DateTime @default(now())
 
   Client       Client         @relation(fields: [clientID], references: [id])
   Dish         Dish           @relation(fields: [dishID], references: [id])
@@ -392,17 +495,21 @@ model commentReply {
   isDeleted Boolean  @default(false)
   clientID  String   @db.ObjectId
   commentID String   @db.ObjectId
+  updateAt  DateTime @updatedAt
+  createAt  DateTime @default(now())
 
   comment comment @relation(fields: [commentID], references: [id])
   Client  Client  @relation(fields: [clientID], references: [id])
 }
 
 model Rating {
-  id         String  @id @default(auto()) @map("_id") @db.ObjectId
+  id         String   @id @default(auto()) @map("_id") @db.ObjectId
   ratingStar Int
-  isDeleted  Boolean @default(false)
-  dishID     String  @db.ObjectId
-  clientID   String  @db.ObjectId
+  isDeleted  Boolean  @default(false)
+  dishID     String   @db.ObjectId
+  clientID   String   @db.ObjectId
+  updateAt   DateTime @updatedAt
+  createAt   DateTime @default(now())
 
   Client Client @relation(fields: [clientID], references: [id])
   Dish   Dish   @relation(fields: [dishID], references: [id])

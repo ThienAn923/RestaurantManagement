@@ -31,7 +31,7 @@ class DepartmentController {
         try {
             const page = parseInt(req.query.page) || 1;
             const limit = parseInt(req.query.limit) || 5;
-            const departments = await departmentService.getAllDepartments(page, limit);
+            const departments = await departmentService.getAllDepartments(page, limit, req.query.sortColumn, req.query.sortOrder);
             res.status(200).json(departments);
         } catch (error) {
             return next(new ApiError(500, error.message));
