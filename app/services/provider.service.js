@@ -18,28 +18,80 @@ class ProviderService {
     //     });
     // }
 
-    //pinia
-    async getAllProviders(page = 1, limit = 5) {
+    // //pinia
+    // async getAllProviders(page = 1, limit = 5) {
+    //     const skip = (page - 1) * limit;
+    //     const [providers, total] = await Promise.all([
+    //     prisma.Provider.findMany({
+    //         where: { isDeleted: false },
+    //         skip,
+    //         take: limit,
+    //         orderBy: { providerName: 'asc' },
+    //     }),
+    //     prisma.Provider.count({ where: { isDeleted: false } }),
+    //     ]);
+    
+    //     return {
+    //     providers,
+    //     total,
+    //     page,
+    //     limit,
+    //     totalPages: Math.ceil(total / limit),
+    //     };
+    // }
+
+    async getAllProviders(page = 1, limit = 5, sortColumn = 'providerName', sortOrder = 'asc') {
         const skip = (page - 1) * limit;
+        const orderBy = {};
+        
+        // Validate sortColumn to prevent potential SQL injection
+        const allowedColumns = ['providerName', 'providerEmail', 'providerPhoneNumber', 'providerStatus', 'createAt'];
+        if (allowedColumns.includes(sortColumn)) {
+            orderBy[sortColumn] = sortOrder.toLowerCase() === 'desc' ? 'desc' : 'asc';
+        } else {
+            orderBy.providerName = 'asc'; // Default sorting
+        }
+
         const [providers, total] = await Promise.all([
-        prisma.Provider.findMany({
+            prisma.Provider.findMany({
             where: { isDeleted: false },
             skip,
             take: limit,
-            orderBy: { providerName: 'asc' },
-        }),
-        prisma.Provider.count({ where: { isDeleted: false } }),
+            orderBy,
+            select: {
+                id: true,
+                providerName: true,
+                providerDescription: true,
+                providerPhoneNumber: true,
+                providerEmail: true,
+                providerAddress: true,
+                providerStatus: true,
+                createAt: true,
+                updateAt: true,
+            },
+            }),
+            prisma.Provider.count({ where: { isDeleted: false } }),
         ]);
-    
+
+        // Custom sorting for providerStatus
+        if (sortColumn === 'providerStatus') {
+            const statusOrder = ['Very Important', 'Important', 'Normal', 'Potential'];
+            providers.sort((a, b) => {
+                return statusOrder.indexOf(a.providerStatus) - statusOrder.indexOf(b.providerStatus);
+            });
+            if (sortOrder.toLowerCase() === 'desc') {
+                providers.reverse();
+            }
+        }
+
         return {
-        providers,
-        total,
-        page,
-        limit,
-        totalPages: Math.ceil(total / limit),
+            providers,
+            total,
+            page,
+            limit,
+            totalPages: Math.ceil(total / limit),
         };
     }
-
     async updateProvider(id, data) {
         return await prisma.provider.update({
             where: { id },

@@ -41,7 +41,7 @@ class PositionController {
         try {
             const page = parseInt(req.query.page) || 1;
             const limit = parseInt(req.query.limit) || 5;
-            const positions = await positionService.getAllPositions(page, limit);
+            const positions = await positionService.getAllPositions(page, limit, req.query.sortColumn, req.query.sortOrder);
             res.status(200).json(positions);
         } catch (error) {
             return next(new ApiError(500, error.message));

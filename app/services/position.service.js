@@ -18,25 +18,57 @@ class PositionService {
     //     });
     // }
     
-    //pinia
-    async getAllPositions(page = 1, limit = 5) {
+    // //pinia
+    // async getAllPositions(page = 1, limit = 5) {
+    //     const skip = (page - 1) * limit;
+    //     const [positions, total] = await Promise.all([
+    //     prisma.Position.findMany({
+    //         where: { isDeleted: false },
+    //         skip,
+    //         take: limit,
+    //         orderBy: { positionName: 'asc' },
+    //     }),
+    //     prisma.Position.count({ where: { isDeleted: false } }),
+    //     ]);
+    
+    //     return {
+    //     positions,
+    //     total,
+    //     page,
+    //     limit,
+    //     totalPages: Math.ceil(total / limit),
+    //     };
+    // }
+
+    //pinia with sort
+    async getAllPositions(page = 1, limit = 5, sortColumn, sortOrder) {
         const skip = (page - 1) * limit;
+        const allowedSortColumns = ['positionName', 'createAt'];
+        
+        // Ensure sortColumn is valid
+        if (!allowedSortColumns.includes(sortColumn)) {
+            sortColumn = 'createAt';
+        }
+
+        // Ensure sortOrder is valid
+        sortOrder = sortOrder.toLowerCase() === 'asc' ? 'asc' : 'desc';
+        console.log(sortColumn, sortOrder);
         const [positions, total] = await Promise.all([
-        prisma.Position.findMany({
+            prisma.Position.findMany({
             where: { isDeleted: false },
             skip,
             take: limit,
-            orderBy: { positionName: 'asc' },
-        }),
-        prisma.Position.count({ where: { isDeleted: false } }),
+            orderBy: { [sortColumn]: sortOrder },
+            }),
+            prisma.Position.count({ where: { isDeleted: false } }),
         ]);
     
         return {
-        positions,
-        total,
-        page,
-        limit,
-        totalPages: Math.ceil(total / limit),
+            positions,
+            total,
+            page,
+            limit,
+            totalPages: Math.ceil(total / limit),
         };
     }
 

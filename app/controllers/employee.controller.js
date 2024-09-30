@@ -3,16 +3,16 @@ const ApiError = require("../api-error");
 
 class EmployeeController {
     async createEmployee(req, res, next) {
-        if (!req.body?.name || !req.body?.employeeAddress || !req.body?.employeeGender || !req.body?.employeeDateOfBirth || !req.body?.positionId || !req.body?.departmentId) {
-            return next(new ApiError(400, "All fields must be filled"));
-        }
+        // if (!req.body?.name || !req.body?.employeeAddress || !req.body?.employeeGender || !req.body?.employeeDateOfBirth || !req.body?.positionId || !req.body?.departmentId) {
+        //     return next(new ApiError(400, "All fields must be filled"));
+        // }
 
         try {
             const employee = await employeeService.createEmployee(req.body);
             res.status(201).json(employee);
         } catch (error) {
             console.log('Error detected:', error);
-            return next(new ApiError(500, "An error occurred while creating employee"));
+            return next(new ApiError(500, error.message));
         }
     }
     
