@@ -43,22 +43,29 @@ class DishTypeController {
   // }
 
   //testing pinia
-  async getAllDishType(req, res, next) {
-    try {
-      const page = parseInt(req.query.page) || 1;
-      const limit = parseInt(req.query.limit) || 5;
-      const result = await dishTypeService.getAllDishTypes(page, limit);
-      res.status(200).json(result);
-    } catch (error) {
-      return next(new ApiError(500, `Error retrieving dish types: ${error.message}`));
-    }
-  }
+  // async getAllDishType(req, res, next) {
+  //   try {
+  //     const page = parseInt(req.query.page) || 1;
+  //     const limit = parseInt(req.query.limit) || 5;
+  //     const result = await dishTypeService.getAllDishTypes(page, limit);
+  //     res.status(200).json(result);
+  //   } catch (error) {
+  //     return next(new ApiError(500, `Error retrieving dish types: ${error.message}`));
+  //   }
+  // }
 
   async getAllDishType(req, res, next) {
     try {
       const page = parseInt(req.query.page) || 1;
       const limit = parseInt(req.query.limit) || 5;
-      const result = await dishTypeService.getAllDishTypes(page, limit);
+      //if no query params are provided, return all dish types (because we gonna need all dish types while selecting dishtype for a dish)
+      let result;
+       if (!req.query.page && !req.query.limit && !req.query.sortColumn && !req.query.sortOrder) {
+          result = await dishTypeService.getAllDishTypesREAL();
+       }
+       else {
+          result = await dishTypeService.getAllDishTypes(page, limit, req.query.sortColumn, req.query.sortOrder);
+       }
       res.status(200).json(result);
     } catch (error) {
       return next(new ApiError(500, `Error retrieving dish types: ${error.message}`));

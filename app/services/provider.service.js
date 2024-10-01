@@ -49,7 +49,7 @@ class ProviderService {
         if (allowedColumns.includes(sortColumn)) {
             orderBy[sortColumn] = sortOrder.toLowerCase() === 'desc' ? 'desc' : 'asc';
         } else {
-            orderBy.providerName = 'asc'; // Default sorting
+            orderBy.createAt = 'asc'; // Default sorting
         }
 
         const [providers, total] = await Promise.all([

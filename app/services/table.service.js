@@ -13,9 +13,11 @@ class TableService {
     }
 
     async getAllTables() {
+        console.log("get all tables")
         return await prisma.table.findMany({
-        where: { isDeleted: false }, // Filter only available tablees
+            where: { isDeleted: false }, // Filter only available tablees
         });
+        
     }
 
     async updateTable(id, data) {

@@ -3,6 +3,7 @@ const prisma = new PrismaClient();
 
 class IngredientService {
     async createIngredient(data) {
+        console.log(JSON.stringify(data));
         return await prisma.ingredient.create({ data });
     }
 

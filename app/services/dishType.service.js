@@ -13,31 +13,82 @@ class DishTypeService {
     });
   }
 
-  // async getAllDishTypes() {
-  //   return await prisma.DishType.findMany({
-  //     where: { isDeleted: false },
-  //   });
+  async getAllDishTypesREAL() {
+    return await prisma.DishType.findMany({
+      where: { isDeleted: false },
+    });
+  }
+
+  // //testing pinia
+  // async getAllDishTypes(page = 1, limit = 5) {
+  //   const skip = (page - 1) * limit;
+  //   const [dishTypes, total] = await Promise.all([
+  //     prisma.DishType.findMany({
+  //       where: { isDeleted: false },
+  //       skip,
+  //       take: limit,
+  //       orderBy: { DishTypeName: 'asc' },
+  //     }),
+  //     prisma.DishType.count({ where: { isDeleted: false } }),
+  //   ]);
+
+  //   return {
+  //     dishTypes,
+  //     total,
+  //     page,
+  //     limit,
+  //     totalPages: Math.ceil(total / limit),
+  //   };
   // }
 
-  //testing pinia
-  async getAllDishTypes(page = 1, limit = 5) {
+  // //testing pinia with sort
+  async getAllDishTypes(page = 1, limit = 5, sortColumn = 'DishTypeName', sortOrder = 'asc') {
     const skip = (page - 1) * limit;
+    const orderBy = {};
+    
+    // Validate sortColumn to prevent potential SQL injection
+    const allowedColumns = ['DishTypeName', 'DishTypeDescription', 'DishTypeAvailable', 'createAt', 'updateAt'];
+    if (allowedColumns.includes(sortColumn)) {
+        orderBy[sortColumn] = sortOrder.toLowerCase() === 'desc' ? 'desc' : 'asc';
+    } else {
+        orderBy.createAt = 'asc'; // Default sorting
+    }
+
     const [dishTypes, total] = await Promise.all([
-      prisma.DishType.findMany({
-        where: { isDeleted: false },
-        skip,
-        take: limit,
-        orderBy: { DishTypeName: 'asc' },
-      }),
-      prisma.DishType.count({ where: { isDeleted: false } }),
+        prisma.DishType.findMany({
+            where: { isDeleted: false },
+            skip,
+            take: limit,
+            orderBy,
+            select: {
+                id: true,
+                DishTypeName: true,
+                DishTypeDescription: true,
+                DishTypeAvailable: true,
+                createAt: true,
+                updateAt: true,
+            },
+        }),
+        prisma.DishType.count({ where: { isDeleted: false } }),
     ]);
 
+    // Custom sorting for DishTypeAvailable
+    if (sortColumn === 'DishTypeAvailable') {
+        dishTypes.sort((a, b) => {
+            if (a.DishTypeAvailable === b.DishTypeAvailable) return 0;
+            return a.DishTypeAvailable ? -1 : 1;
+        });
+        if (sortOrder.toLowerCase() === 'desc') {
+            dishTypes.reverse();
+        }
+    }
+
     return {
-      dishTypes,
-      total,
-      page,
-      limit,
-      totalPages: Math.ceil(total / limit),
+        dishTypes,
+        total,
+        page,
+        limit,
+        totalPages: Math.ceil(total / limit),
     };
   }
 

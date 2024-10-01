@@ -90,7 +90,7 @@ model Table {
   tableNumber Int      @unique
   tableStatus Boolean  @default(true)
   seatNumber  Int
-  isDeleted   Boolean  @default(true)
+  isDeleted   Boolean  @default(false)
   updateAt    DateTime @updatedAt
   createAt    DateTime @default(now())
 
@@ -142,11 +142,11 @@ model Person {
   updateAt       DateTime @updatedAt
   createAt       DateTime @default(now())
 
-  employee   Employee? @relation(fields: [employeeId], references: [id])
-  employeeId String?   @db.ObjectId
-  client     Client?   @relation(fields: [clientId], references: [id])
-  clientId   String?   @db.ObjectId
+  employeeId String?    @db.ObjectId
+  clientId   String?    @db.ObjectId
   account    account[]
+  Client     Client?    @relation(fields: [clientId], references: [id])
+  Employee   Employee[]
 }
 
 model Employee {
@@ -156,18 +156,18 @@ model Employee {
   employeeDateOfBirth DateTime
   employeePhoneNumber String
   employeeEmail       String
-  personId            String
+  personId            String   @db.ObjectId
 
   orders    Order[] //currently made 0->many order
   isDeleted Boolean  @default(false)
   updateAt  DateTime @updatedAt
   createAt  DateTime @default(now())
 
-  Person        Person[]
   Work          Work[]
   FeedbackReply FeedbackReply[]
   importInvoice importInvoice[]
   Invoice       Invoice[]
+  person        Person          @relation(fields: [personId], references: [id])
 }
 
 model account {

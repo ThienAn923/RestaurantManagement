@@ -5,7 +5,8 @@ class IngredientController {
     async createIngredient(req, res, next) {
         try {
             const ingredient = await ingredientService.createIngredient(req.body);
-            return ingredient;
+            console.log("create ingredient testing");
+            return res.status(201).json(ingredient);
         } catch (error) {
             throw new ApiError(500, error.message);
         }
