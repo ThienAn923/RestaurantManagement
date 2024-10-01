@@ -4,20 +4,24 @@ const prisma = new PrismaClient();
 class PromotionAfterDishService {
     
     async createPromotionAfterDish(data) {
-        const { promotionName, promotionDiscription, discount, startDay, endDate, dishID } = data;
+        const { promotionName, promotionDiscription, discount, startDate, endDate, dishID } = data;
         const promotion = await prisma.promotion.create({
             data: {
                 promotionName,
                 promotionDiscription,
                 discount,
-                startDay,
+                startDate,
                 endDate,
             }
         });
         const promotionAfterDish = await prisma.promotionAfterDish.create({
             data: {
-                dishID,
-                promotionID: promotion.id,
+                Promotion: {
+                    connect: { id: promotion.id } 
+                },
+                Dish: {
+                    connect: { id: dishID}
+                }
             }
         });
         return {promotionAfterDish, promotion};

@@ -3,9 +3,11 @@ const ApiError = require("../api-error");
 
 class EmployeeController {
     async createEmployee(req, res, next) {
-        if (!req.body?.name || !req.body?.employeeAddress || !req.body?.employeeGender || !req.body?.employeeDateOfBirth || !req.body?.positionId || !req.body?.departmentId) {
-            return next(new ApiError(400, "All fields must be filled"));
-        }
+        console.log(req.body)
+
+        // if (!req.body?.name || !req.body?.employeeAdress || !req.body?.employeeGender || !req.body?.employeeDateOfBirth || !req.body?.positionId || !req.body?.departmentId) {
+        //     return next(new ApiError(400, "All fields must be filled"));
+        // }
 
         try {
             const employee = await employeeService.createEmployee(req.body);

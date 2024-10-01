@@ -21,7 +21,8 @@
     "eslint": "^9.9.1",
     "eslint-config-prettier": "^9.1.0",
     "nodemon": "^3.1.4",
-    "prettier": "^3.3.3"
+    "prettier": "^3.3.3",
+    "prisma": "^5.19.1"
   },
   "dependencies": {
     "@prisma/client": "^5.19.1",
@@ -31,7 +32,6 @@
     "express": "^4.19.2",
     "jsonwebtoken": "^9.0.2",
     "mongoose": "^8.6.1",
-    "pinia": "^2.2.2",
-    "prisma": "^5.19.1"
+    "pinia": "^2.2.2"
   }
 }

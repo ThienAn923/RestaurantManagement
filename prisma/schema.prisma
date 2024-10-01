@@ -290,7 +290,6 @@ model Provider {
 
 model importInvoice {
   id              String   @id @default(auto()) @map("_id") @db.ObjectId
-  importInvoiceID String   @db.ObjectId
   importDate      DateTime
   totalExpense    Float
   providerID      String   @db.ObjectId

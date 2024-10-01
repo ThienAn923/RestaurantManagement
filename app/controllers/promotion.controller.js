@@ -4,18 +4,23 @@ const promotionAfterInvoiceService = require('../services/promotionAfterInvoice.
 const ApiError = require("../api-error");
 
 class PromotionController{
-    async createPromotion(type, data) {
+    async createPromotion( req, res, next) {
         try {
-            if(type === 'afterDish'){
-                const promotion = await promotionAfterDishService.createPromotionAfterDish(data);
+            const promotion = await promotionAfterDishService.createPromotionAfterDish(req.body);
+                res.status(201).json(promotion);
                 return promotion;
-            }
-            else if(type === 'afterInvoice'){
-                const promotion = await promotionAfterInvoiceService.createPromotionAfterInvoice(data);
-                return promotion;
-            }
+            // if(type === 'afterDish'){
+                
+            // }
+            // else if(type === 'afterInvoice'){
+            //     const promotion = await promotionAfterInvoiceService.createPromotionAfterInvoice(req.body);
+            //     res.status(201).json(promotion);
+            //     return promotion;
+            // }
         } catch (error) {
-            throw new ApiError(500, "An error occurred while creating promotion");
+            console.log('Error detected:', error);
+
+    return next(new ApiError(500, "An error occurred while creating dish"));
         }
     }
 

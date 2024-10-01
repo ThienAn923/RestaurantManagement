@@ -2,15 +2,17 @@ const orderService = require('../services/order.service');
 const ApiError = require("../api-error");
 
 class OrderController {
-    async createOrder(data) {
+    async createOrder(req, res, next) {
+
         try {
-            const order = await orderService.createOrder(data);
-            return order;
+          const order = await orderService.createOrder(req.body);
+          res.status(201).json(order);
         } catch (error) {
-            throw new ApiError(500, "An error occurred while creating order");
+          console.log('Error detected:', error);
+      
+          return next(new ApiError(500, error.message));
         }
-    }
-    
+      }
     async getOrderById(req, res, next) {
         try {
             const order = await orderService.getOrderById(req.params.id);

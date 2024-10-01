@@ -1,4 +1,5 @@
 const { PrismaClient } = require('@prisma/client');
+const { connect } = require('mongoose');
 const prisma = new PrismaClient();
 
 class ImportInvoiceService {
@@ -6,23 +7,42 @@ class ImportInvoiceService {
 
         const { employeeId, providerId, importInvoiceDetails } = data;
         let totalExpense = 0;
-        
+        let quantity=0
         //create import invoice, make totakExpense = 0 first
         const importInvoice = await prisma.importInvoice.create({
             data: {
-                employeeId: employeeId,
-                providerId: providerId,
+                Employee: {
+                    connect: {id: employeeId}
+                },
+                Provider: {
+                    connect: {id: providerId}
+                },
                 importDate: new Date(),
                 totalExpense: 0,
             },
-        });
-
+        }); 
+        console.log(importInvoiceDetails)
         //create import invoice details, calculate totalExpense
         for (const detail of importInvoiceDetails) {
             totalExpense += detail.quantity * detail.price;
-            await this.createImportInvoiceDetail(importInvoice.id, detail.ingredientId, detail.quantity);
+            quantity+=1
+            // const ingredient = await prisma.ingredient.findUnique({ where: { id: detail.ingredientId } });
+            // const totalExpenses = detail.quantity * ingredient.price;
+                    
+            const importInvoiceDetail = await prisma.importInvoiceDetail.create({
+                data: {
+                    totalExpense: totalExpense,
+                    quantity: quantity,
+                    ImportInvoice: {
+                        connect: {id: importInvoice.id}
+                    },
+                    ingredient: {
+                        connect: {id: detail.ingredientId}
+                    }
+                },
+            });
+            return importInvoiceDetail;
         }
-
         //update totalExpense
         await prisma.importInvoice.update({
             where: { id: importInvoice.id },

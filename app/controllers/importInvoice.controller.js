@@ -2,15 +2,16 @@ const importInvoiceService  = require('../services/importInvoice.service');
 const ApiError = require("../api-error");
 
 class ImportInvoiceController {
-    async createImportInvoice(data) {
+    async createImportInvoice(req, res, next) {
         try {
-            const importInvoice = await importInvoiceService.createImportInvoice(data);
-            return importInvoice;
+          const importInvoice = await importInvoiceService.createImportInvoice(req.body);
+          res.status(201).json(importInvoice);
         } catch (error) {
-            throw new ApiError(500, "An error occurred while creating import invoice");
+          console.log('Error detected:', error);
+      
+          return next(new ApiError(500, "An error occurred while creating dish"));
         }
-    }
-    
+      }
     async getImportInvoiceById(req, res, next) {
         try {
             const importInvoice = await importInvoiceService.getImportInvoiceById(req.params.id);

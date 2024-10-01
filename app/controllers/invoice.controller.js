@@ -5,10 +5,13 @@ class InvoiceController {
     async createInvoice(req, res, next) {
         try {
             const invoice = await invoiceService.createInvoice(req.body);
+            res.status(201).json(invoice);
             return invoice;
         } catch (error) {
-            throw new ApiError(500, "An error occurred while creating invoice");
-        }
+            console.log('Error detected:', error);
+        
+            return next(new ApiError(500, error.message));
+          }
     }
     
     async getInvoiceById(req, res, next) {

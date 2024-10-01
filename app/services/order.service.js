@@ -7,19 +7,19 @@ class OrderService {
     }
 
     async getOrderById(id) {
-        return await prisma.Order.findUnique({
+        return await prisma.order.findUnique({
         where: { id },
         include: { costs: true }, // Include costs if needed
         });
     }
 
     async getAllOrders() {
-        return await prisma.Order.findMany({
+        return await prisma.order.findMany({
         });
     }
 
     async updateOrder(id, data) {
-        return await prisma.Order.update({
+        return await prisma.order.update({
         where: { id },
         data,
         });
@@ -27,7 +27,7 @@ class OrderService {
 
     async deleteOrder(id) {
         // Soft delete (set isDeleted to true)
-        return await prisma.Order.update({
+        return await prisma.order.update({
         where: { id },
         data: { isDeleted: true },
         });

@@ -3,20 +3,25 @@ const prisma = new PrismaClient();
 
 class PromotionAfterInvoiceService {
     async createPromotionAfterInvoice(data) {
-        const { promotionName, promotionDiscription, discount, startDay, endDate } = data;
+        const { promotionName, promotionDiscription, discount, startDate, endDate, invoiceID} = data;
         const promotion = await prisma.promotion.create({
             data: {
                 promotionName,
                 promotionDiscription,
                 discount,
-                startDay,
+                startDate,
                 endDate,
             }
         });
         const promotionAfterInvoice = await prisma.promotionAfterInvoice.create({
             data: {
-                invoiceID,
-                promotionID: promotion.id,
+                Promotion: {
+                    connect: {id: promotion.id}
+                },
+                Invoice: {
+                    connect: {id: invoiceID}
+                }
+               
             }
         });
         return {promotion, promotionAfterInvoice};
