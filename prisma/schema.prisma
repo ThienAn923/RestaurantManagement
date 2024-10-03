@@ -16,16 +16,17 @@ model Dish {
   isDeleted   Boolean  @default(false)
   updateAt    DateTime @updatedAt
   createAt    DateTime @default(now())
+  promotionID String?  @db.ObjectId
 
   costs        Cost[]
   orderDetails OrderDetail[]
 
-  DishType           DishType             @relation(fields: [dishType], references: [id])
-  PromotionAfterDish PromotionAfterDish[]
-  invoiceDetail      invoiceDetail[]
-  images             Image[]
-  comment            comment[]
-  Rating             Rating[]
+  DishType      DishType            @relation(fields: [dishType], references: [id])
+  promotion     PromotionAfterDish? @relation(fields: [promotionID], references: [id])
+  invoiceDetail invoiceDetail[]
+  images        Image[]
+  comment       comment[]
+  Rating        Rating[]
 }
 
 model Image {
@@ -228,7 +229,6 @@ model Promotion {
   id                   String   @id @default(auto()) @map("_id") @db.ObjectId
   promotionName        String
   promotionDescription String?
-  promotionLimit       Int? //this should be the limit of promotion, if it's null, then it's unlimited for ex: 99k, 199k, 299k
   discount             Float
   startDate            DateTime
   endDate              DateTime
@@ -244,34 +244,38 @@ model Promotion {
 model PromotionAfterDish {
   id          String   @id @default(auto()) @map("_id") @db.ObjectId
   promotionID String   @db.ObjectId
-  dishID      String   @db.ObjectId
   isDeleted   Boolean  @default(false)
   updateAt    DateTime @updatedAt
   createAt    DateTime @default(now())
 
   Promotion Promotion @relation(fields: [promotionID], references: [id])
-  Dish      Dish      @relation(fields: [dishID], references: [id])
+  dishes    Dish[]
 }
 
 model PromotionAfterInvoice {
-  id          String   @id @default(auto()) @map("_id") @db.ObjectId
-  promotionID String   @db.ObjectId
-  isDeleted   Boolean  @default(false)
-  updateAt    DateTime @updatedAt
-  createAt    DateTime @default(now())
+  id             String   @id @default(auto()) @map("_id") @db.ObjectId
+  promotionID    String   @db.ObjectId
+  minimumSpend   Int?     @default(0)
+  promotionLimit Int? //this should be the limit of promotion, if it's null, then it's unlimited for ex: 99k, 199k, 299k
+  isDeleted      Boolean  @default(false)
+  updateAt       DateTime @updatedAt
+  createAt       DateTime @default(now())
 
-  Promotion Promotion @relation(fields: [promotionID], references: [id])
-  Invoice   Invoice[]
+  Promotion          Promotion            @relation(fields: [promotionID], references: [id])
+  Invoice            Invoice[]
+  PromotionToInvoice PromotionToInvoice[]
 }
 
 model PromotionToInvoice {
-  id          String   @id @default(auto()) @map("_id") @db.ObjectId
-  promotionID String   @db.ObjectId
-  invoiceID   String   @db.ObjectId
-  createAt    DateTime @default(now())
+  id                      String   @id @default(auto()) @map("_id") @db.ObjectId
+  promotionAfterInvoiceID String   @db.ObjectId
+  invoiceID               String   @db.ObjectId
+  createAt                DateTime @default(now())
 
-  Promotion Promotion @relation(fields: [promotionID], references: [id])
-  Invoice   Invoice   @relation(fields: [invoiceID], references: [id])
+  PromotionAfterInvoice PromotionAfterInvoice @relation(fields: [promotionAfterInvoiceID], references: [id])
+  Invoice               Invoice               @relation(fields: [invoiceID], references: [id])
+  Promotion             Promotion?            @relation(fields: [promotionId], references: [id])
+  promotionId           String?               @db.ObjectId
 }
 
 //shows history of point usage of client in each invoice
@@ -376,16 +380,15 @@ model Provider {
 }
 
 model importInvoice {
-  id              String   @id @default(auto()) @map("_id") @db.ObjectId
-  importInvoiceID String   @db.ObjectId
-  importDate      DateTime //aka arrival date
+  id           String   @id @default(auto()) @map("_id") @db.ObjectId
+  importDate   DateTime //aka arrival date
   //i honestly don't know should i put these 2 status here or not
   // invoiceStatus   Boolean  @default(true) //true = paid, false = not paid
   // orderStatus    Boolean  @default(true) //true = ordered, false = not ordered
-  totalExpense    Float
-  providerID      String   @db.ObjectId
-  employeeID      String   @db.ObjectId
-  createAt        DateTime @default(now())
+  totalExpense Float
+  providerID   String   @db.ObjectId
+  employeeID   String   @db.ObjectId
+  createAt     DateTime @default(now())
 
   Provider            Provider              @relation(fields: [providerID], references: [id])
   importInvoiceDetail importInvoiceDetail[]
@@ -397,6 +400,7 @@ model importInvoiceDetail {
   importInvoiceID String   @db.ObjectId
   ingredientID    String   @db.ObjectId
   quantity        Int
+  price           Float
   totalExpense    Float
   createAt        DateTime @default(now())
 

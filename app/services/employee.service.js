@@ -1,10 +1,12 @@
 const prisma = require('../../prisma/client');
+const DepartmentService = require("../services/department.service");
+const PositionService = require("../services/position.service");
 
 class EmployeeService {
     async createEmployee(data) {
         //profilePicture should be default by the "default avatar link"
-        const { name, profilePicture, employeeAdress, employeeGender, employeeDateOfBirth, positionId, departmentId, accountAuthory } = data;
-    
+        const { name, profilePicture, employeeAdress, employeeGender, employeeDateOfBirth, positionId, departmentId, AccountAuthority, StartDay } = data;
+
         //create a person
         const person = await prisma.person.create({
             data: {
@@ -13,30 +15,40 @@ class EmployeeService {
             }
         });
 
-        //create an employee linked to that person
+        //create employee
         const employee = await prisma.employee.create({
             data: {
-                employeeAdress,
-                employeeGender,
-                employeeDateOfBirth,
+                employeeAdress: employeeAdress,
+                employeeGender: employeeGender,
+                employeeDateOfBirth: employeeDateOfBirth,
+                employeePhoneNumber: '0123456789', //temporary phone number
+                employeeEmail: 'anb2110113@student.ctu.edu.vn', //temporary email
                 personId: person.id,
             }
         });
-
+        
         const work = await prisma.work.create({
             data: {
-                positionId,
-                departmentId,
-                employeeId: employee.id,
+                startDay: StartDay, // Sử dụng StartDay từ dữ liệu đầu vào
+                Employee: {
+                    connect: { id: employee.id } // Kết nối đến employee đã tạo
+                },
+                Department: {
+                    connect: { id: departmentId } // Kết nối đến department đã lấy
+                },
+                Position: {
+                    connect: { id: positionId } // Kết nối đến position đã lấy
+                }
             }
         });
+
 
         const account = await prisma.account.create({
             data: {
                 //temporary username and password, will figured out how to generate it later
                 accountUsername: name,
                 accountPassword: '123456',
-                accountAuthory: accountAuthory, //1 for employee //0 for admins //2 for clients
+                AccountAuthority: AccountAuthority, //1 for employee //0 for admins //2 for clients
                 personId: person.id,
             }
         });
@@ -63,11 +75,11 @@ class EmployeeService {
         });
     }
 
-    async getAllEmployeesVIP() {
+    async getAllEmployeesREAL() {
         return await prisma.employee.findMany({
         where: { isDeleted: false },
         include:{
-            Person: {
+            person: {
                 include: {
                 account: true,
                 },
@@ -88,33 +100,33 @@ class EmployeeService {
         const [employees, total] = await Promise.all([
         prisma.employee.findMany({
             where: { isDeleted: false },
-            include: {
-            Person: {
                 include: {
-                account: true,
+                    person: {
+                        include: {
+                        account: true,
+                        },
+                    },
+                    Work: {
+                        include: {
+                        Position: true,
+                        Department: true,
+                        },
+                    },
                 },
-            },
-            Work: {
-                include: {
-                Position: true,
-                Department: true,
-                },
-            },
-            },
             skip,
             take: limit,
-        }),
-        prisma.employee.count({ where: { isDeleted: false } }),
-    ])
+            }),
+            prisma.employee.count({ where: { isDeleted: false } }),
+        ])
 
-    return {
-      employees,
-      total,
-      page: parseInt(page),
-      limit: parseInt(limit),
-      totalPages: Math.ceil(total / limit),
-      
-    }
+        return {
+        employees,
+        total,
+        page: parseInt(page),
+        limit: parseInt(limit),
+        totalPages: Math.ceil(total / limit),
+        
+        }
     }
 
     async updateEmployee(id, data) {

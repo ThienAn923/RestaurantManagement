@@ -21,9 +21,11 @@ class TableService {
     }
 
     async updateTable(id, data) {
+        const {numberOfSeats: seatNumber, status: tableStatus, ... rest} = data;
+        const updatedData = { ...rest, seatNumber, tableStatus };
         return await prisma.table.update({
         where: { id },
-        data,
+        data: updatedData,
         });
     }
 

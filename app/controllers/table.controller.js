@@ -40,7 +40,7 @@ class TableController {
             }
             res.status(200).json(table);
         } catch (error) {
-            return next(new ApiError(500, "An error occurred while updating table"));
+            return next(new ApiError(500, error.message));
         }
     }
 

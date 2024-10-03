@@ -13,11 +13,11 @@ class DepartmentService {
         });
     }
     
-    // async getAllDepartments() {
-    //     return await prisma.Department.findMany({
-    //     where: { isDeleted: false },
-    //     });
-    // }
+    async getAllDepartmentsREAL() {
+        return await prisma.Department.findMany({
+        where: { isDeleted: false },
+        });
+    }
 
     //pinia
     // async getAllDepartments(page = 1, limit = 5) {

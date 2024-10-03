@@ -3,15 +3,17 @@ const ApiError = require("../api-error");
 
 class PositionController {
     async createPosition(req, res, next) {
+        let totalEmployee = 9999; //Temporary value (will fix after figured out a way to count the number of employees)
         if (!req.body?.positionName) {
             return next(new ApiError(400, "Position Name must be filled"));
         }
         try {
+            req.body.totalEmployee = totalEmployee; //this line is here just because total employee haven't been counted yet
             const position = await positionService.createPosition(req.body);
             res.status(201).json(position);
         } catch (error) {
             console.log('Error detected:', error);
-            return next(new ApiError(500, "An error occurred while creating position"));
+            return next(new ApiError(500, error.message));
         }
     }
 
@@ -41,7 +43,14 @@ class PositionController {
         try {
             const page = parseInt(req.query.page) || 1;
             const limit = parseInt(req.query.limit) || 5;
-            const positions = await positionService.getAllPositions(page, limit, req.query.sortColumn, req.query.sortOrder);
+
+            let positions
+            if(!req.query.sortColumn && !req.query.sortOrder && !req.query.page && !req.query.limit) {
+                positions = await positionService.getAllPositionsREAL();
+            } else {
+                positions = await positionService.getAllPositions(page, limit, req.query.sortColumn, req.query.sortOrder);
+            }
+            // const positions = await positionService.getAllPositions(page, limit, req.query.sortColumn, req.query.sortOrder);
             res.status(200).json(positions);
         } catch (error) {
             return next(new ApiError(500, error.message));

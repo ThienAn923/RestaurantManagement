@@ -31,7 +31,12 @@ class EmployeeController {
     async getAllEmployees(req, res, next) {
         try {
             const { page = 1, limit = 5 } = req.query
-            const result = await employeeService.getAllEmployees(parseInt(page), parseInt(limit))
+            let result
+            if(req.query.page && req.query.limit) {
+                result = await employeeService.getAllEmployees(parseInt(page), parseInt(limit))
+            } else {
+                result = await employeeService.getAllEmployeesREAL()
+            }
             res.status(200).json(result)
         } catch (error) {
             return next(new ApiError(500, error.message));

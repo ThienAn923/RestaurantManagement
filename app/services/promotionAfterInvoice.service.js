@@ -3,20 +3,24 @@ const prisma = new PrismaClient();
 
 class PromotionAfterInvoiceService {
     async createPromotionAfterInvoice(data) {
-        const { promotionName, promotionDiscription, discount, startDay, endDate } = data;
+        const { promotionName, promotionDescription, discount, startDate, endDate, promotionLimit } = data;
+        let isoStartDate = new Date(startDate);
+        let isoEndDate = new Date(endDate);
         const promotion = await prisma.promotion.create({
             data: {
                 promotionName,
-                promotionDiscription,
+                promotionDescription,
                 discount,
-                startDay,
-                endDate,
+                startDate: isoStartDate,
+                endDate: isoEndDate,
+                promotionLimit,
             }
         });
         const promotionAfterInvoice = await prisma.promotionAfterInvoice.create({
             data: {
-                invoiceID,
-                promotionID: promotion.id,
+                Promotion: {
+                    connect: {id: promotion.id}
+                },
             }
         });
         return {promotion, promotionAfterInvoice};
@@ -27,7 +31,6 @@ class PromotionAfterInvoiceService {
             where: { id },
             include:{
                 promotion: true,
-                invoice: true,
             },
         });
     }
@@ -37,7 +40,6 @@ class PromotionAfterInvoiceService {
         where: { isDeleted: false },
         include:{
             promotion: true,
-            invoice: true,
         },
         });
     }
@@ -65,12 +67,10 @@ class PromotionAfterInvoiceService {
             },
         });
 
-        return await prisma.promotionAfterInvoice.update({
-            where: { id },
-            data: {
-                invoiceID,
-            },
-        });
+        // return await prisma.promotionAfterInvoice.update({
+        //     where: { id },
+        //     //well, there's nothing to leave here
+        // });
     }
 
     async deletePromotionAfterInvoice(id) {

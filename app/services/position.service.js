@@ -12,11 +12,11 @@ class PositionService {
         });
     }
     
-    // async getAllPositions() {
-    //     return await prisma.Position.findMany({
-    //     where: { isDeleted: false },
-    //     });
-    // }
+    async getAllPositionsREAL() {
+        return await prisma.Position.findMany({
+        where: { isDeleted: false },
+        });
+    }
     
     // //pinia
     // async getAllPositions(page = 1, limit = 5) {

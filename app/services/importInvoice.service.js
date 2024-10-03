@@ -6,12 +6,17 @@ class ImportInvoiceService {
 
         const { employeeId, providerId, importInvoiceDetails } = data;
         let totalExpense = 0;
+        let quantity=0
         
         //create import invoice, make totakExpense = 0 first
         const importInvoice = await prisma.importInvoice.create({
             data: {
-                employeeId: employeeId,
-                providerId: providerId,
+                Employee: {
+                    connect: {id: employeeId}
+                },
+                Provider: {
+                    connect: {id: providerId}
+                },
                 importDate: new Date(),
                 totalExpense: 0,
             },
@@ -20,7 +25,24 @@ class ImportInvoiceService {
         //create import invoice details, calculate totalExpense
         for (const detail of importInvoiceDetails) {
             totalExpense += detail.quantity * detail.price;
-            await this.createImportInvoiceDetail(importInvoice.id, detail.ingredientId, detail.quantity);
+            console.log("AHHHHHHHHHH debug!!!" + detail.quantity + " " + detail.price)
+            quantity+=1
+            // const ingredient = await prisma.ingredient.findUnique({ where: { id: detail.ingredientId } });
+            // const totalExpenses = detail.quantity * ingredient.price;
+
+            const importInvoiceDetail = await prisma.importInvoiceDetail.create({
+                data: {
+                    totalExpense: totalExpense,
+                    quantity: quantity,
+                    ImportInvoice: {
+                        connect: {id: importInvoice.id}
+                    },
+                    ingredient: {
+                        connect: {id: detail.ingredientId}
+                    }
+                },
+            });
+            return importInvoiceDetail;
         }
 
         //update totalExpense
@@ -43,7 +65,7 @@ class ImportInvoiceService {
         });
     }
 
-    async getAllImportInvoices() {
+    async getAllImportInvoicesREAL() {
         return await prisma.importInvoice.findMany({
             include: {
                 importInvoiceDetail: true,
@@ -51,6 +73,37 @@ class ImportInvoiceService {
                 Employee: true,
             },
         });
+    }
+
+    //pinia pagination
+    async getAllImportInvoices(page, limit, sortColumn, sortOrder) {
+        const skip = (page - 1) * limit;
+        const orderBy = { [sortColumn]: sortOrder };
+
+        const [importInvoices, totalCount] = await Promise.all([
+            prisma.importInvoice.findMany({
+                skip,
+                take: limit,
+                orderBy,
+                include: {
+                    importInvoiceDetail: {
+                        include: {
+                            ingredient: true
+                        }
+                    },
+                    Provider: true,
+                    Employee: true,
+                },
+            }),
+            prisma.importInvoice.count()
+        ]);
+
+        return {
+            importInvoices,
+            total: totalCount,
+            page,
+            limit
+        };
     }
 
     //i don't know if this have any uses anymore. i write this just in case
