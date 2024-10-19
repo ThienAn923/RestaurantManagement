@@ -15,28 +15,67 @@ class IngredientTypeService {
     async getAllIngredientTypesVIP() {
         return await prisma.ingredientType.findMany({
             where: { isDeleted: false },
+            //I will select only the needed part in the future, now, i don't have time (to debug if there is an error)
+            // select: {
+            //     id: true,
+            //     ingredientTypeName: true,
+            // },
         });
     }
 
     //pinia
-    async getAllIngredientTypes(page = 1, limit = 5) {
+    async getAllIngredientTypes(page = 1, limit = 5, sortColumn = 'createAt', sortOrder = 'asc', search = '') {
+        // console.log(search); //test if search is working
         const skip = (page - 1) * limit;
-        const [ingredientTypes, total] = await Promise.all([
-        prisma.ingredientType.findMany({
-            where: { isDeleted: false },
+        const orderBy = {};
+        
+        // Validate sortColumn to prevent potential SQL injection
+        const allowedColumns = ['ingredientTypeName', 'ingredientTypeDescription', 'createAt'];
+        if (allowedColumns.includes(sortColumn)) {
+            orderBy[sortColumn] = sortOrder.toLowerCase() === 'desc' ? 'desc' : 'asc';
+        } else {
+            orderBy.createAt = 'asc'; // Default sorting
+        }
+
+        let where = {
+            isDeleted: false,
+        };
+
+        if (search !== '') {
+            where = {
+                ...where,
+                AND: [
+                    { ingredientTypeName: { contains: search } },
+                ]
+            };
+        }
+
+        const [data, total] = await Promise.all([
+            prisma.ingredientType.findMany({
+            where,
             skip,
             take: limit,
-            orderBy: { ingredientTypeName: 'asc' },
-        }),
-        prisma.ingredientType.count({ where: { isDeleted: false } }),
+            orderBy,
+            select: {
+                id: true,
+                ingredientTypeName: true,
+                ingredientTypeDescription: true,
+                isDeleted: true,
+                createAt: true,
+                updateAt: true,
+            },
+            }),
+            //count total data of the input condition   
+            prisma.ingredientType.count({ where }),
         ]);
     
         return {
-        ingredientTypes,
-        total,
-        page,
-        limit,
-        totalPages: Math.ceil(total / limit),
+            data,
+            total,
+            page,
+            limit,
+            search,
+            totalPages: Math.ceil(total / limit),
         };
     }
 

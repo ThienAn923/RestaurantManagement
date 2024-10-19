@@ -25,24 +25,75 @@ class IngredientService {
     }   
 
     //pinia
-    async getAllIngredients(page = 1, limit = 5) {
+        async getAllIngredients(page = 1, limit = 5, sortColumn = 'createAt', sortOrder = 'asc', filter = 'AllTypes', search = '') {
         const skip = (page - 1) * limit;
-        const [ingredients, total] = await Promise.all([
-        prisma.ingredient.findMany({
-            where: { isDeleted: false },
-            include: { ingredientType: true },
+        const orderBy = {};
+
+        // Validate sortColumn to prevent potential SQL injection
+        const allowedColumns = ['ingredientName', 'ingredientType', 'createAt'];
+        if (allowedColumns.includes(sortColumn)) {
+            orderBy[sortColumn] = sortOrder.toLowerCase() === 'desc' ? 'desc' : 'asc';
+        } else {
+            orderBy.createAt = 'asc'; // Default sorting
+        }
+
+        let where;
+        if (filter !== 'AllTypes' || search !== '') {
+            where = {
+                isDeleted: false,
+                //And condition combined filter and search, if filter is not AllTypes, add ingredientTypeID to where
+                //If search is not empty, add OR condition to where to search by ingredientName
+                AND: [
+                    ...(filter !== 'AllTypes' ? [{ ingredientTypeID: filter }] : []),
+                    ...(search !== '' ? [
+                        {
+                            OR: [
+                                { ingredientName: { contains: search } },
+                            ]
+                        }
+                    ] : [])
+                ]
+            };
+        } else {
+            where = { isDeleted: false };
+        }
+
+        const [data, total] = await Promise.all([
+            prisma.ingredient.findMany({
+            where,
             skip,
             take: limit,
-            orderBy: { ingredientName: 'asc' },
+            orderBy,
+            select: {
+                id: true,
+                ingredientName: true,
+                ingredientTypeID: true,
+                isDeleted: true,
+                createAt: true,
+                updateAt: true,
+                ingredientType: {
+                    select: {
+                        id: true,
+                        ingredientTypeName: true,
+                        ingredientTypeDescription: true,
+                        createAt: true,
+                        updateAt: true,
+                     },
+                },
+            }
         }),
-        prisma.ingredient.count({ where: { isDeleted: false } }),
+            //count total data of the input condition   
+            prisma.ingredient.count({ where }),
         ]);
 
         return {
-        ingredients,
+        data,
         total,
         page,
         limit,
+        filter,
+        search,
+        totalPages: Math.ceil(total / limit),
         };
     }
     

@@ -48,7 +48,7 @@ class PositionController {
             if(!req.query.sortColumn && !req.query.sortOrder && !req.query.page && !req.query.limit) {
                 positions = await positionService.getAllPositionsREAL();
             } else {
-                positions = await positionService.getAllPositions(page, limit, req.query.sortColumn, req.query.sortOrder);
+                positions = await positionService.getAllPositions(page, limit, req.query.sortColumn, req.query.sortOrder, req.query.search);
             }
             // const positions = await positionService.getAllPositions(page, limit, req.query.sortColumn, req.query.sortOrder);
             res.status(200).json(positions);

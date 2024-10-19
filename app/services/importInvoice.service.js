@@ -76,33 +76,110 @@ class ImportInvoiceService {
     }
 
     //pinia pagination
-    async getAllImportInvoices(page, limit, sortColumn, sortOrder) {
+    async getAllImportInvoices(page, limit, sortColumn, sortOrder, filter = 'AllProvider', search = '') {
         const skip = (page - 1) * limit;
-        const orderBy = { [sortColumn]: sortOrder };
+        //doesn't support nested sort yet
+        // const orderBy = { [sortColumn]: sortOrder };
+        
+        //support nested sort
+        const orderBy = sortColumn.includes('Provider.')
+            ? { Provider: { providerName: sortOrder } }
+            : { [sortColumn]: sortOrder };
 
-        const [importInvoices, totalCount] = await Promise.all([
-            prisma.importInvoice.findMany({
-                skip,
-                take: limit,
-                orderBy,
-                include: {
-                    importInvoiceDetail: {
-                        include: {
-                            ingredient: true
+        
+        // const [importInvoices, totalCount] = await Promise.all([
+        //     prisma.importInvoice.findMany({
+        //         skip,
+        //         take: limit,
+        //         orderBy,
+        //         include: {
+        //             importInvoiceDetail: {
+        //                 include: {
+        //                     ingredient: true
+        //                 }
+        //             },
+        //             Provider: true,
+        //             Employee: true,
+        //         },
+        //     }),
+        //     prisma.importInvoice.count()
+        // ]);
+
+        let where;
+        if (filter !== 'AllProvider' || search !== '') {
+            where = {
+                //And condition combined filter and search, if filter is not AllProvider, add providerStatus to where
+                //If search is not empty, add OR condition to where to search by createAt
+                //why there is AND here? it actually because i copy pasted this XD
+                //it suppose to have "isDeleted: false" here but since invoice cannot be deleted, i remove it
+                    ...(filter !== 'AllProvider' ? [{ providerName: filter }] : []),
+                    ...(search !== '' ? [
+                        {
+                            OR: [
+                                { createAt: { contains: search } },
+                                // employee name
+                            ]
                         }
-                    },
-                    Provider: true,
-                    Employee: true,
+                    ] : [])
+            };
+        }
+
+        const [data, total] = await Promise.all([
+            prisma.importInvoice.findMany({
+            where,
+            skip,
+            take: limit,
+            orderBy,
+            select: {
+                id: true,
+                importDate: true,
+                totalExpense: true,
+                providerID: true,
+                employeeID: true,
+                createAt: true,
+                importInvoiceDetail: true,
+                Provider: {
+                    select: {
+                        id: true,
+                        providerName: true,
+                        providerDescription: true,
+                        providerPhoneNumber: true,
+                        providerEmail: true,
+                        providerAddress: true,
+                        providerStatus: true,
+                        isDeleted: true,
+                        updateAt: true,
+                        createAt: true,
+                    }
                 },
+                Employee: {
+                    select: {
+                        id: true,
+                        employeeAdress: true,
+                        employeeGender: true,
+                        employeeDateOfBirth: true,
+                        employeePhoneNumber: true,
+                        employeeEmail: true,
+                        personId: true,
+                        isDeleted: true,
+                        updateAt: true,
+                        createAt: true,
+                    }
+                }
+            },
             }),
-            prisma.importInvoice.count()
+            //count total data of the input condition   
+            prisma.importInvoice.count({ where }),
         ]);
 
         return {
-            importInvoices,
-            total: totalCount,
+            data,
+            total,
             page,
-            limit
+            limit,
+            filter,
+            search,
+            totalPages: Math.ceil(total / limit),
         };
     }
 

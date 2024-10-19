@@ -40,7 +40,8 @@ class ProviderService {
     //     };
     // }
 
-    async getAllProviders(page = 1, limit = 5, sortColumn = 'providerName', sortOrder = 'asc') {
+    async getAllProviders(page = 1, limit = 5, sortColumn = 'providerName', sortOrder = 'asc', filter = 'AllStatus', search = '') {
+        console.log(search);
         const skip = (page - 1) * limit;
         const orderBy = {};
         
@@ -52,9 +53,33 @@ class ProviderService {
             orderBy.createAt = 'asc'; // Default sorting
         }
 
-        const [providers, total] = await Promise.all([
+        let where;
+        if (filter !== 'AllStatus' || search !== '') {
+            where = {
+                isDeleted: false,
+                //And condition combined filter and search, if filter is not AllStatus, add providerStatus to where
+                //If search is not empty, add OR condition to where to search by providerName, providerEmail, providerPhoneNumber, providerStatus    
+                AND: [
+                    ...(filter !== 'AllStatus' ? [{ providerStatus: filter }] : []),
+                    ...(search !== '' ? [
+                        {
+                            OR: [
+                                { providerName: { contains: search } },
+                                { providerEmail: { contains: search } },
+                                { providerPhoneNumber: { contains: search } },
+                                { providerStatus: { contains: search } },
+                            ]
+                        }
+                    ] : [])
+                ]
+            };
+        }else where = { isDeleted: false };
+
+        // console.log(filter)
+
+        const [data, total] = await Promise.all([
             prisma.Provider.findMany({
-            where: { isDeleted: false },
+            where,
             skip,
             take: limit,
             orderBy,
@@ -70,7 +95,8 @@ class ProviderService {
                 updateAt: true,
             },
             }),
-            prisma.Provider.count({ where: { isDeleted: false } }),
+            //count total data of the input condition   
+            prisma.Provider.count({ where }),
         ]);
 
         // Custom sorting for providerStatus
@@ -86,10 +112,12 @@ class ProviderService {
         }
 
         return {
-            providers,
+            data,
             total,
             page,
             limit,
+            filter,
+            search,
             totalPages: Math.ceil(total / limit),
         };
     }

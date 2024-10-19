@@ -30,7 +30,7 @@ class IngredientTypeController {
             const { page, limit } = req.query;
             let result;
             if (page && limit) {
-                result = await ingredientTypeService.getAllIngredientTypes(parseInt(page), parseInt(limit));
+                result = await ingredientTypeService.getAllIngredientTypes(parseInt(page), parseInt(limit), req.query.sortColumn, req.query.sortOrder, req.query.search);
             } else {
                 result = await ingredientTypeService.getAllIngredientTypesVIP();
             }

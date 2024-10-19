@@ -42,7 +42,8 @@ class DishTypeService {
   // }
 
   // //testing pinia with sort
-  async getAllDishTypes(page = 1, limit = 5, sortColumn = 'DishTypeName', sortOrder = 'asc') {
+  async getAllDishTypes(page = 1, limit = 5, sortColumn = 'DishTypeName', sortOrder = 'asc', search = '', filter = 'AllStatus', ) {
+    // console.log(sortColumn);
     const skip = (page - 1) * limit;
     const orderBy = {};
     
@@ -54,37 +55,49 @@ class DishTypeService {
         orderBy.createAt = 'asc'; // Default sorting
     }
 
-    const [dishTypes, total] = await Promise.all([
+    //if the string is not AllStatus, or true, this will have a value of false, if string is "true" this will have a value of true
+    //if the string is AllStatus, this will have a value of AllStatus
+    let where;
+    if (filter !== 'AllStatus' || search !== '') {
+        where = {
+            isDeleted: false, 
+            AND: [
+                ...(filter !== 'AllStatus' ? [{ DishTypeAvailable: filter }] : []),
+                ...(search !== '' ? [
+                    {
+                        OR: [
+                            { DishTypeName: { contains: search } },
+                            
+                        ]
+                    }
+                ] : [])
+            ]
+        };
+    }else where = { isDeleted: false };
+
+      // console.log(filter)
+
+    const [data, total] = await Promise.all([
         prisma.DishType.findMany({
-            where: { isDeleted: false },
-            skip,
-            take: limit,
-            orderBy,
-            select: {
-                id: true,
-                DishTypeName: true,
-                DishTypeDescription: true,
-                DishTypeAvailable: true,
-                createAt: true,
-                updateAt: true,
-            },
+        where,
+        skip,
+        take: limit,
+        orderBy,
+        select: {
+              id: true,
+              DishTypeName: true,
+              DishTypeDescription: true,
+              DishTypeAvailable: true,
+              createAt: true,
+              updateAt: true,
+          },
         }),
-        prisma.DishType.count({ where: { isDeleted: false } }),
+        //count total data of the input condition   
+        prisma.DishType.count({ where }),
     ]);
 
-    // Custom sorting for DishTypeAvailable
-    if (sortColumn === 'DishTypeAvailable') {
-        dishTypes.sort((a, b) => {
-            if (a.DishTypeAvailable === b.DishTypeAvailable) return 0;
-            return a.DishTypeAvailable ? -1 : 1;
-        });
-        if (sortOrder.toLowerCase() === 'desc') {
-            dishTypes.reverse();
-        }
-    }
-
     return {
-        dishTypes,
+        data,
         total,
         page,
         limit,

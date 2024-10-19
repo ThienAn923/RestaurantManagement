@@ -1,4 +1,5 @@
 const { PrismaClient } = require('@prisma/client');
+const { position } = require('../../prisma/client');
 const prisma = new PrismaClient();
 
 class PositionService {
@@ -41,7 +42,7 @@ class PositionService {
     // }
 
     //pinia with sort
-    async getAllPositions(page = 1, limit = 5, sortColumn, sortOrder) {
+    async getAllPositions(page = 1, limit = 5, sortColumn, sortOrder, search = '') {
         const skip = (page - 1) * limit;
         const allowedSortColumns = ['positionName', 'createAt'];
         
@@ -52,19 +53,47 @@ class PositionService {
 
         // Ensure sortOrder is valid
         sortOrder = sortOrder.toLowerCase() === 'asc' ? 'asc' : 'desc';
-        console.log(sortColumn, sortOrder);
-        const [positions, total] = await Promise.all([
+
+        let where = {
+            isDeleted: false,
+        };
+        if (search) {
+            where.positionName = {
+                contains: search,
+                mode: 'insensitive',
+            };
+        }
+        const [data, total] = await Promise.all([
             prisma.Position.findMany({
-            where: { isDeleted: false },
+            where,
             skip,
             take: limit,
             orderBy: { [sortColumn]: sortOrder },
             }),
-            prisma.Position.count({ where: { isDeleted: false } }),
+            prisma.Position.count({ where }),
         ]);
+        const positionWithTotalEmployee = await Promise.all(data.map(async (position) => {
+            const totalEmployee = await prisma.Work.count({
+                where: { positionID: position.id, endDate: undefined } 
+            });
+            return { ...position, totalEmployee };
+        }))
+        
+
+
+        // const [positions, total] = await Promise.all([
+        //     prisma.Position.findMany({
+        //     where: { isDeleted: false },
+        //     skip,
+        //     take: limit,
+        //     orderBy: { [sortColumn]: sortOrder },
+        //     }),
+        //     prisma.Position.count({ where: { isDeleted: false } }),
+        // ]);
+        
     
         return {
-            positions,
+            data: positionWithTotalEmployee,
             total,
             page,
             limit,

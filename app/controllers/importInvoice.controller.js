@@ -29,7 +29,7 @@ class ImportInvoiceController {
         try {
             const page = req.query.page ? parseInt(req.query.page) : 1;
             const limit = req.query.limit ? parseInt(req.query.limit) : 10;
-            const importInvoices = await importInvoiceService.getAllImportInvoices(page, limit, req.query.sortColumn, req.query.sortOrder);
+            const importInvoices = await importInvoiceService.getAllImportInvoices(page, limit, req.query.sortColumn, req.query.sortOrder, req.query.filter, req.query.search);
             res.status(200).json(importInvoices);
         } catch (error) {
             return next(new ApiError(500, error.message));

@@ -33,7 +33,7 @@ class DepartmentController {
             const limit = parseInt(req.query.limit) || 5;
             let departments
             if (req.query.sortColumn && req.query.sortOrder && req.query.page && req.query.limit) {
-                departments = await departmentService.getAllDepartments(page, limit, req.query.sortColumn, req.query.sortOrder);
+                departments = await departmentService.getAllDepartments(page, limit, req.query.sortColumn, req.query.sortOrder, req.query.search);
             } else {
                 departments = await departmentService.getAllDepartmentsREAL();
             }

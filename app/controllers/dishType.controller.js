@@ -64,7 +64,8 @@ class DishTypeController {
           result = await dishTypeService.getAllDishTypesREAL();
        }
        else {
-          result = await dishTypeService.getAllDishTypes(page, limit, req.query.sortColumn, req.query.sortOrder);
+          console.log(req.query.search);
+          result = await dishTypeService.getAllDishTypes(page, limit, req.query.sortColumn, req.query.sortOrder, req.query.search, req.query.filter);
        }
       res.status(200).json(result);
     } catch (error) {

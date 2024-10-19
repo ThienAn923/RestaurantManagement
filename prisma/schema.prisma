@@ -49,13 +49,16 @@ model Cost {
 }
 
 model DishType {
-  id                  String   @id @default(auto()) @map("_id") @db.ObjectId
+  id                  String @id @default(auto()) @map("_id") @db.ObjectId
   DishTypeName        String
   DishTypeDescription String
-  DishTypeAvailable   Boolean  @default(true)
-  isDeleted           Boolean  @default(false)
-  updateAt            DateTime @updatedAt
-  createAt            DateTime @default(now())
+
+  //Why? prisma don't support sort = boolean, so i use string instead
+  DishTypeAvailable Boolean @default(true)
+
+  isDeleted Boolean  @default(false)
+  updateAt  DateTime @updatedAt
+  createAt  DateTime @default(now())
 
   dish_list Dish[]
 }
@@ -169,6 +172,7 @@ model Employee {
   importInvoice importInvoice[]
   Invoice       Invoice[]
   person        Person          @relation(fields: [personId], references: [id])
+  Department    Department[]
 }
 
 model account {
@@ -196,6 +200,8 @@ model Department {
   Work                  Work[]
   updateAt              DateTime? @updatedAt
   createAt              DateTime? @default(now())
+
+  Employee Employee? @relation(fields: [headOfDepartment], references: [id])
 }
 
 model Position {
@@ -239,6 +245,7 @@ model Promotion {
   PromotionAfterDish    PromotionAfterDish[]
   PromotionAfterInvoice PromotionAfterInvoice[]
   PromotionToInvoice    PromotionToInvoice[]
+  invoiceDetail         invoiceDetail[]
 }
 
 model PromotionAfterDish {
@@ -295,18 +302,21 @@ model pointUsage {
 //if you want to add more promotion for 1 invoice, another model like "promotionOfInvoice" should be created
 //to store the promotionID and invoiceID, many to many relationship
 model Invoice {
-  id             String   @id @default(auto()) @map("_id") @db.ObjectId
-  invoiceDate    DateTime @default(now())
-  totalCost      Float
-  orderNote      String?
-  totalPromotion Int?
-  invoiceStatus  Boolean  @default(true) //true = paid, false = not paid
-  employeeID     String   @db.ObjectId
-  tableID        String   @db.ObjectId
-  promotionID    String?  @db.ObjectId
-  createAt       DateTime @default(now())
+  id                      String   @id @default(auto()) @map("_id") @db.ObjectId
+  invoiceDate             DateTime @default(now())
+  totalCost               Float
+  orderNote               String?
+  totalPromotion          Int?
+  invoiceStatus           Boolean  @default(false) //true = paid, false = not paid
+  employeeID              String   @db.ObjectId
+  tableID                 String   @db.ObjectId
+  promotionAfterInvoiceID String?  @db.ObjectId
 
-  PromotionAfterInvoice PromotionAfterInvoice? @relation(fields: [promotionID], references: [id])
+  //those 2 statuses are not needed
+  // createAt                DateTime @default(now())
+  // updateAt                DateTime @updatedAt
+
+  PromotionAfterInvoice PromotionAfterInvoice? @relation(fields: [promotionAfterInvoiceID], references: [id])
   Employee              Employee               @relation(fields: [employeeID], references: [id])
   Table                 Table                  @relation(fields: [tableID], references: [id])
   invoiceDetail         invoiceDetail[]
@@ -316,15 +326,23 @@ model Invoice {
 }
 
 model invoiceDetail {
-  id        String   @id @default(auto()) @map("_id") @db.ObjectId
-  invoiceID String   @db.ObjectId
-  dishID    String   @db.ObjectId
-  quantity  Int
-  totalCost Int
-  createAt  DateTime @default(now())
+  id                   String   @id @default(auto()) @map("_id") @db.ObjectId
+  invoiceID            String   @db.ObjectId
+  dishID               String   @db.ObjectId
+  quantity             Int
+  totalCost            Int
+  salePerUnit          Int?
+  promotionAfterDishID String?  @db.ObjectId
+  createAt             DateTime @default(now())
 
-  Invoice Invoice @relation(fields: [invoiceID], references: [id])
-  Dish    Dish    @relation(fields: [dishID], references: [id])
+  //Please note that the promotionAfterDishID is not required, it's optional
+  //Also please note that this promotion link isn't in the class diagram
+  //But the promotion link is needed to know which promotion is used for this dish
+  //And it's extreamlly difficult to extract data from which promotion is used for this dish without this link
+  //It's in CDM now, but kinda feels unsettling
+  Promotion Promotion? @relation(fields: [promotionAfterDishID], references: [id])
+  Invoice   Invoice    @relation(fields: [invoiceID], references: [id])
+  Dish      Dish       @relation(fields: [dishID], references: [id])
 }
 
 model Payment {

@@ -32,6 +32,8 @@ class AccountService {
     });
   }
 
+
+  //will make username become unique later lmao
   async getAccountByUsername(username) {
     return await prisma.account.findFirst({
         where: { accountUsername: username },
