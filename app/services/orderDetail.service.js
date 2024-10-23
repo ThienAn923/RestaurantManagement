@@ -14,7 +14,6 @@ class OrderDetailService {
 
     async getAllOrderDetails() {
         return await prisma.orderDetail.findMany({
-            where: { isDeleted: false },
         });
     }
 
@@ -28,7 +27,7 @@ class OrderDetailService {
     async deleteOrderDetail(id) {
         return await prisma.orderDetail.update({
             where: { id },
-            data: { isDeleted: true },
+            data: {  },
         });
     }
 

@@ -60,26 +60,25 @@ model DishType {
 }
 
 model Order {
-  id          String   @id @default(auto()) @map("_id") @db.ObjectId
-  orderStatus Boolean  @default(true)
-  employeeID  String   @db.ObjectId
+  id          String        @id @default(auto()) @map("_id") @db.ObjectId
+  orderStatus String
+  employeeID  String        @db.ObjectId
   orderNote   String
-  tableID     String?  @unique @db.ObjectId
-  updateAt    DateTime @updatedAt
-  createAt    DateTime @default(now())
-
+  tableID     String?       @unique @db.ObjectId
+  updateAt    DateTime      @updatedAt
+  createAt    DateTime      @default(now())
   Employee    Employee      @relation(fields: [employeeID], references: [id])
   Table       Table?        @relation(fields: [tableID], references: [id])
   OrderDetail OrderDetail[]
 }
 
 model OrderDetail {
-  id       String   @id @default(auto()) @map("_id") @db.ObjectId
-  dishId   String   @db.ObjectId
-  quantity Int
-  orderID  String   @db.ObjectId
-  updateAt DateTime @updatedAt
-  createAt DateTime @default(now())
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  dishId    String   @db.ObjectId
+  quantity  Int
+  orderID   String   @db.ObjectId
+  updateAt  DateTime @updatedAt
+  createAt  DateTime @default(now())
 
   Dish  Dish  @relation(fields: [dishId], references: [id])
   Order Order @relation(fields: [orderID], references: [id])

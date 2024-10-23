@@ -3,10 +3,6 @@ const ApiError = require("../api-error");
 
 class EmployeeController {
     async createEmployee(req, res, next) {
-        // if (!req.body?.name || !req.body?.employeeAddress || !req.body?.employeeGender || !req.body?.employeeDateOfBirth || !req.body?.positionId || !req.body?.departmentId) {
-        //     return next(new ApiError(400, "All fields must be filled"));
-        // }
-
         try {
             const employee = await employeeService.createEmployee(req.body);
             res.status(201).json(employee);
@@ -30,14 +26,22 @@ class EmployeeController {
     
     async getAllEmployees(req, res, next) {
         try {
-            const { page = 1, limit = 5 } = req.query
-            const result = await employeeService.getAllEmployees(parseInt(page), parseInt(limit))
+            // const { page = 1, limit = 5 } = req.query
+            const result = await employeeService.getAllEmployees()
             res.status(200).json(result)
         } catch (error) {
             return next(new ApiError(500, error.message));
         }
     }
-    
+    async getAllEmployeesVIP(req, res, next) {
+        try {
+            // const { page = 1, limit = 5 } = req.query
+            const result = await employeeService.getAllEmployeesVIP()
+            res.status(200).json(result)
+        } catch (error) {
+            return next(new ApiError(500, error.message));
+        }
+    }
     async updateEmployee(req, res, next) {
         try {
             const updatedEmployee = await employeeService.updateEmployee(req.params.id, req.body);

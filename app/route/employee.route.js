@@ -5,7 +5,7 @@ const EmployeeController = require("../controllers/employee.controller.js");
 const router = express.Router();
 
 router.route("/")
-    .get(EmployeeController.getAllEmployees)
+    .get(EmployeeController.getAllEmployeesVIP)
     .post(EmployeeController.createEmployee)
 
 router.route("/:id")

@@ -17,13 +17,12 @@ const promotionRouter = require('./app/route/promotion.route');
 const tableRouter = require('./app/route/table.route');
 const login = require('./app/route/login.route');
 const providerRouter = require('./app/route/provider.route');
-
+const orderDetailRouter = require('./app/route/orderDetail.route')
 const ApiError = require("./app/api-error");
-
 app.use(cors());
 app.use(express.json());
 
-app.get("/", (req, res) => {
+app.get("/", (req, res) => {    
     res.json({ message: "Welcome to ThienAn Restaurant"});
 });
 app.get("/dish", (req, res) => {
@@ -31,6 +30,8 @@ app.get("/dish", (req, res) => {
 });
 
 app.use("/login", login)
+
+app.use("/api/orderDetail", orderDetailRouter);
 
 app.use("/api/dish", dishRouter);
 
@@ -69,7 +70,5 @@ app.use((err, req, res, next) => {
         message: err.message || "Internal Server Error",
     });
 });
-
-
 
 module.exports = app;

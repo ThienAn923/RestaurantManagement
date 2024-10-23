@@ -1,15 +1,20 @@
 const prisma = require('../../prisma/client');
-
+const DepartmentService = require("../services/department.service");
+const PositionService = require("../services/position.service");
 class EmployeeService {
     async createEmployee(data) {
         //profilePicture should be default by the "default avatar link"
-        const { name, profilePicture, employeeAdress, employeeGender, employeeDateOfBirth, positionId, departmentId, accountAuthory } = data;
-    
+        const { name, profilePicture, 
+            employeeAdress, employeeGender, 
+            employeeDateOfBirth,employeePhoneNumber, 
+            employeeEmail,
+            positionId, departmentId, 
+            AccountAuthority, StartDay } = data;
+
         //create a person
         const person = await prisma.person.create({
             data: {
                 name: name,
-                profilePicture: profilePicture,
             }
         });
 
@@ -17,26 +22,36 @@ class EmployeeService {
         const employee = await prisma.employee.create({
             data: {
                 employeeAdress,
+                employeeEmail,
                 employeeGender,
                 employeeDateOfBirth,
+                employeePhoneNumber,
                 personId: person.id,
             }
         });
-
+        
         const work = await prisma.work.create({
             data: {
-                positionId,
-                departmentId,
-                employeeId: employee.id,
+                startDay: StartDay, // Sử dụng StartDay từ dữ liệu đầu vào
+                Employee: {
+                    connect: { id: employee.id } // Kết nối đến employee đã tạo
+                },
+                Department: {
+                    connect: { id: departmentId } // Kết nối đến department đã lấy
+                },
+                Position: {
+                    connect: { id: positionId } // Kết nối đến position đã lấy
+                },
             }
         });
+        
 
         const account = await prisma.account.create({
             data: {
                 //temporary username and password, will figured out how to generate it later
                 accountUsername: name,
                 accountPassword: '123456',
-                accountAuthory: accountAuthory, //1 for employee //0 for admins //2 for clients
+                AccountAuthority: AccountAuthority, //1 for employee //0 for admins //2 for clients
                 personId: person.id,
             }
         });

@@ -1,7 +1,7 @@
 const prisma = require('../../prisma/client');
 
 class PersonService {
-  async createDish(data) {
+  async createPerson(data) {
     return await prisma.person.create({ data });
   }
 
