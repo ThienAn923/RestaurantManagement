@@ -57,6 +57,16 @@ class DishTypeService {
 
     //if the string is not AllStatus, or true, this will have a value of false, if string is "true" this will have a value of true
     //if the string is AllStatus, this will have a value of AllStatus
+    //temporarily, because time limit
+    if (filter == 'false') {
+        filter = false;
+    }
+    else if (filter === 'true') {
+        filter = true;
+    }
+    //end of temporary
+
+
     let where;
     if (filter !== 'AllStatus' || search !== '') {
         where = {

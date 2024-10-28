@@ -4,10 +4,11 @@ const ApiError = require("../api-error");
 class InvoiceController {
     async createInvoice(req, res, next) {
         try {
+            console.log(req.body);
             const invoice = await invoiceService.createInvoice(req.body);
             res.status(201).json(invoice);
         } catch (error) {
-            throw new ApiError(500, "An error occurred while creating invoice");
+            throw new ApiError(500, error.message);
         }
     }
     

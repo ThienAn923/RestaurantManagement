@@ -17,6 +17,7 @@ const promotionRouter = require('./app/route/promotion.route');
 const tableRouter = require('./app/route/table.route');
 const login = require('./app/route/login.route');
 const providerRouter = require('./app/route/provider.route');
+const orderDetailRouter = require('./app/route/orderDetail.route')
 
 const ApiError = require("./app/api-error");
 
@@ -61,6 +62,8 @@ app.use("/api/promotion", promotionRouter);
 app.use("/api/table", tableRouter);
 
 app.use("/api/provider", providerRouter);
+
+app.use("/api/orderDetail", orderDetailRouter);
 
 
 

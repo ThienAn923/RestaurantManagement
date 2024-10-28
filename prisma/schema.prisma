@@ -65,7 +65,8 @@ model DishType {
 
 model Order {
   id          String   @id @default(auto()) @map("_id") @db.ObjectId
-  orderStatus Boolean  @default(true)
+  // orderStatus Boolean  @default(true)
+  orderStatus String
   employeeID  String   @db.ObjectId
   orderNote   String
   tableID     String?  @unique @db.ObjectId
@@ -245,7 +246,6 @@ model Promotion {
   PromotionAfterDish    PromotionAfterDish[]
   PromotionAfterInvoice PromotionAfterInvoice[]
   PromotionToInvoice    PromotionToInvoice[]
-  invoiceDetail         invoiceDetail[]
 }
 
 model PromotionAfterDish {
@@ -255,8 +255,9 @@ model PromotionAfterDish {
   updateAt    DateTime @updatedAt
   createAt    DateTime @default(now())
 
-  Promotion Promotion @relation(fields: [promotionID], references: [id])
-  dishes    Dish[]
+  Promotion     Promotion       @relation(fields: [promotionID], references: [id])
+  dishes        Dish[]
+  invoiceDetail invoiceDetail[]
 }
 
 model PromotionAfterInvoice {
@@ -319,7 +320,7 @@ model Invoice {
   PromotionAfterInvoice PromotionAfterInvoice? @relation(fields: [promotionAfterInvoiceID], references: [id])
   Employee              Employee               @relation(fields: [employeeID], references: [id])
   Table                 Table                  @relation(fields: [tableID], references: [id])
-  invoiceDetail         invoiceDetail[]
+  invoiceDetail_list    invoiceDetail[]
   Payment               Payment[]
   pointUsage            pointUsage[]
   PromotionToInvoice    PromotionToInvoice[]
@@ -340,9 +341,9 @@ model invoiceDetail {
   //But the promotion link is needed to know which promotion is used for this dish
   //And it's extreamlly difficult to extract data from which promotion is used for this dish without this link
   //It's in CDM now, but kinda feels unsettling
-  Promotion Promotion? @relation(fields: [promotionAfterDishID], references: [id])
-  Invoice   Invoice    @relation(fields: [invoiceID], references: [id])
-  Dish      Dish       @relation(fields: [dishID], references: [id])
+  Promotion PromotionAfterDish? @relation(fields: [promotionAfterDishID], references: [id])
+  Invoice   Invoice             @relation(fields: [invoiceID], references: [id])
+  Dish      Dish                @relation(fields: [dishID], references: [id])
 }
 
 model Payment {

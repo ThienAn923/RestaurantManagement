@@ -1,14 +1,18 @@
 const { PrismaClient } = require('@prisma/client');
+const { table } = require('../../prisma/client');
 const prisma = new PrismaClient();
 
 class InvoiceService {
     async createInvoice(data) {
-        const { orderId } = data;
+        try{
+        // console.log("Im here", data);
+        const orderId  = data.OrderID;
+        // console.log(orderId);
 
         //find order by id
         const order = await prisma.order.findUnique({
             where: { id: orderId },
-            include: { orderDetails: true }
+            include: { OrderDetail: true }
         });
 
         if (!order) {
@@ -17,8 +21,8 @@ class InvoiceService {
         
         // find order details by order id
         const orderDetails = await prisma.orderDetail.findMany({
-            where: { orderId: order.id },
-            include: { dish: true }
+            where: { orderID: order.id },
+            include: { Dish: true }
         });
 
         // Calculate total cost of order details
@@ -30,11 +34,11 @@ class InvoiceService {
             const dish = await prisma.dish.findUnique({ where: { id: orderDetail.dishId } });
             const latestCost = await prisma.cost.findFirst({
                 where: { dishId: dish.id },
-                orderBy: { timeChange: 'desc' },
+                orderBy: { createAt: 'desc' },
             });
 
             if (latestCost) {
-                totalCost += latestCost.cost * detail.quantity;
+                totalCost += latestCost.cost * orderDetail.quantity;
             }
         }
 
@@ -49,35 +53,51 @@ class InvoiceService {
             },
         });
 
+        // console.log(invoice);
+
         // Create invoice details
         //Could this be shorter if i merge this with the previous loop? Currently i dont know think so. Good luck my future self
         for (const orderDetail of orderDetails) {
             let invoiceDetailCost = 0;
             const latestCost = await prisma.cost.findFirst({
-                where: { dishId: dish.id },
-                orderBy: { timeChange: 'desc' },
+                where: { dishId: orderDetail.dishId },
+                orderBy: { createAt: 'desc' },
             });
             invoiceDetailCost = orderDetail.quantity * latestCost.cost;
             await prisma.invoiceDetail.create({
                 data: {
                     quantity: orderDetail.quantity,
-                    dishId: orderDetail.dishId,
-                    invoiceId: invoice.id,
+                    dishID: orderDetail.dishId,
+                    invoiceID: invoice.id,
                     totalCost: invoiceDetailCost,
                 },
             });
         }
         
         //IMPORTANT PART!!
-        //finally delete the order
+        //finally delete the order detail
+        for (const orderDetail of orderDetails) {
+            await prisma.orderDetail.delete({ where: { id: orderDetail.id } });
+        }
+        //delete the order
+        global.io.emit('orderDeleted', orderId);
+        global.io.emit('tableUpdate', order.tableID);
         await prisma.order.delete({ where: { id: orderId } });
-        //change the table status to 0
-        await prisma.table.update({
+
+
+        //change the table status to false
+        const UpdateTable = await prisma.table.update({
             where: { id: order.tableID },
-            data: { status: 0 },
+            data: { tableStatus: true },
         });
+        console.log("Table status updated", UpdateTable);
+
+        
 
         return invoice;
+        }catch(error){
+            console.log(error);
+        }
     }
 
     async getInvoiceById(id) {
@@ -95,29 +115,44 @@ class InvoiceService {
 
     async getAllInvoices(page = 1, limit = 5) {
         const skip = (page - 1) * limit;
+
+        //for test
+        // let where = {};
+        // const dishList = await prisma.dishType.findMany({
+        //     where,
+        //     include: {
+        //         dish_list: true
+        //     }
+        // });
         const [invoices, total] = await Promise.all([
         prisma.invoice.findMany({
             skip,
             take: limit,
             orderBy: {
-            invoiceDate: 'desc'
+                invoiceDate: 'desc'
             },
             include: {
-            PromotionAfterInvoice: true,
-            Employee: {
-                include: {
-                    Person: true
+                PromotionAfterInvoice: true,
+                Employee: {
+                    include: {
+                        person: true
+                    }
+                },
+                Table: true,
+                invoiceDetail_list: {
+                    include: {
+                        Dish: true,
+                        //explantion: The first Promotion is actually PromotionAfterDish, the later promotion is THE PROMOTION, THE OBJECT, which contain the name of the promotion.
+                        Promotion: {
+                            include: {
+                                Promotion: true
+                            }
+                        }
+                    }
                 }
-            },
-            Table: true,
-            invoiceDetail: {
-                include: {
-                    Dish: true
-                }
-            }
             }
         }),
-        prisma.invoice.count()
+            prisma.invoice.count()
         ]);
 
         const formattedInvoices = invoices.map(invoice => ({
@@ -126,21 +161,25 @@ class InvoiceService {
         totalCost: invoice.totalCost,
         orderNote: invoice.orderNote,
         employeeID: invoice.employeeID,
-        employeeName: invoice.Employee.Person.name,
+        employeeName: invoice.Employee.person.name,
         tableID: invoice.tableID,
         tableNumber: invoice.Table.tableNumber,
         promotionID: invoice.promotionID,
-        promotionName: invoice.PromotionAfterInvoice?.Promotion.promotionName,
-        invoiceDetails: invoice.invoiceDetail.map(detail => ({
+        promotionName: invoice.PromotionAfterInvoice?.Promotion.Promotion.promotionName ?? 'No promotion',
+        invoiceDetails: invoice.invoiceDetail_list.map(detail => ({
             id: detail.id,
             dishName: detail.Dish.name,
             quantity: detail.quantity,
-            totalCost: detail.totalCost
+            totalCost: detail.totalCost,
+            createAt: detail.createAt,
+            salePerUnit: detail.salesPerUnit,
+            promotionAfterDishID: detail.promotionAfterDishID
+
         }))
     }));
 
         return {
-        invoices : formattedInvoices,
+        data: formattedInvoices,
         total,
         page,
         limit,

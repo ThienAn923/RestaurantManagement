@@ -3,7 +3,11 @@ const prisma = require('../../prisma/client'); // Go up two directories from 'se
 
 class TableService {
     async createTable(data) {
-        return await prisma.table.create({ data });
+        const table = await prisma.table.create({ data });
+        global.io.emit("tableAdd",table)
+        console.log(table);
+        return table;
+        
     }
 
     async getTableById(id) {
@@ -21,12 +25,15 @@ class TableService {
     }
 
     async updateTable(id, data) {
+        console.log("Updating table");
         const {numberOfSeats: seatNumber, status: tableStatus, ... rest} = data;
         const updatedData = { ...rest, seatNumber, tableStatus };
-        return await prisma.table.update({
-        where: { id },
-        data: updatedData,
+        const updatedTable = await prisma.table.update({
+            where: { id },
+            data: updatedData,
         });
+        global.io.emit("tableUpdate",updatedTable);
+        return updatedTable;
     }
 
     async deleteTable(id) {
