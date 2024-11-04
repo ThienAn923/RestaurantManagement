@@ -7,11 +7,11 @@ class InvoiceService {
         try{
         // console.log("Im here", data);
         const orderId  = data.OrderID;
-        // console.log(orderId);
+        // console.log("LMAOOOOOOOOOOOOOOOOOOOOOOOOOOO",orderId);
 
         //find order by id
         const order = await prisma.order.findUnique({
-            where: { id: orderId },
+            where: { id: orderId, },
             include: { OrderDetail: true }
         });
 
@@ -41,6 +41,22 @@ class InvoiceService {
                 totalCost += latestCost.cost * orderDetail.quantity;
             }
         }
+        
+        //THIS LOGIC IS WRONG!!!! BUT TEMPORARILY USABLE. i gotta show the product tomorrow
+        // Apply promotion discount if available
+        // Get the first promotion that hasn't ended
+        const currentDate = new Date();
+        const promotion = await prisma.promotion.findFirst({
+            where: { isDeleted: false, startDate: { lte: currentDate }, endDate: { gte: currentDate } },
+            select: { discount: true, promotionName: true },
+        });
+        const promotionAfterInvoice = await prisma.promotionAfterInvoice.findFirst({
+            where: { promotionID: promotion.id, isDeleted: false },
+        });
+
+
+
+        
 
         // Create invoice
         const invoice = await prisma.invoice.create({
@@ -50,6 +66,11 @@ class InvoiceService {
                 tableID: order.tableID,
                 totalCost: totalCost,
                 invoiceDate: new Date(),
+                promotionAfterInvoiceID: promotionAfterInvoice.id,
+
+                //Cheating
+                discount: promotion.discount,
+                promotionName: promotion.promotionName,
             },
         });
 
@@ -81,22 +102,35 @@ class InvoiceService {
         }
         //delete the order
         global.io.emit('orderDeleted', orderId);
-        global.io.emit('tableUpdate', order.tableID);
+        //update table status socket
+        console.log("Running log tableID at invoice.service.js. Table ID:", order.tableID);
+
         await prisma.order.delete({ where: { id: orderId } });
 
 
-        //change the table status to false
-        const UpdateTable = await prisma.table.update({
-            where: { id: order.tableID },
-            data: { tableStatus: true },
-        });
-        console.log("Table status updated", UpdateTable);
+        // //change the table status to true
+        // const UpdateTable = await prisma.table.update({
+        //     where: { id: order.tableID },
+        //     data: { tableStatus: true },
+        // });
+        try {
+            const updatedTable = await prisma.table.update({
+                where: { id: order.tableID },
+                data: { tableStatus: true },
+            });
+            //why reconstructing the table? because in table.vue, which was written in the beginning, i messed up the table status, so i have to reconstruct it
+            const reconstructedTable = { ...updatedTable, status: updatedTable.tableStatus };
+            global.io.emit("tableUpdate",reconstructedTable);
+            console.log("Running at invoice.service.js! Table status updated: ", updatedTable);
+        } catch (error) {
+            console.log("1",error);
+        }
 
         
 
         return invoice;
         }catch(error){
-            console.log(error);
+            console.log("2",error);
         }
     }
 
@@ -115,6 +149,7 @@ class InvoiceService {
 
     async getAllInvoices(page = 1, limit = 5) {
         const skip = (page - 1) * limit;
+        console.log("Running getAllInvoices 1 at invoice.service.js");
 
         //for test
         // let where = {};
@@ -142,7 +177,7 @@ class InvoiceService {
                 invoiceDetail_list: {
                     include: {
                         Dish: true,
-                        //explantion: The first Promotion is actually PromotionAfterDish, the later promotion is THE PROMOTION, THE OBJECT, which contain the name of the promotion.
+                        // explantion: The first Promotion is actually PromotionAfterDish, the later promotion is THE PROMOTION, THE OBJECT, which contain the name of the promotion.
                         Promotion: {
                             include: {
                                 Promotion: true
@@ -164,8 +199,14 @@ class InvoiceService {
         employeeName: invoice.Employee.person.name,
         tableID: invoice.tableID,
         tableNumber: invoice.Table.tableNumber,
-        promotionID: invoice.promotionID,
-        promotionName: invoice.PromotionAfterInvoice?.Promotion.Promotion.promotionName ?? 'No promotion',
+        
+        // probably proper way
+        // promotionID: invoice.promotionID,
+        // promotionName: invoice.PromotionAfterInvoice?.Promotion.Promotion.promotionName ?? 'No promotion',
+        //This is CHEATING, i have no time
+        promotionName: invoice.promotionName,
+        discount: invoice.discount,
+
         invoiceDetails: invoice.invoiceDetail_list.map(detail => ({
             id: detail.id,
             dishName: detail.Dish.name,

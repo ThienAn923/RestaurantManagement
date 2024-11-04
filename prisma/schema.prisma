@@ -17,6 +17,7 @@ model Dish {
   updateAt    DateTime @updatedAt
   createAt    DateTime @default(now())
   promotionID String?  @db.ObjectId
+  timeToCook  Int?     @default(10) //Warning!!! this is in minutes, AND, More importantly, it's optional, which is not supposed to be!!! 
 
   costs        Cost[]
   orderDetails OrderDetail[]
@@ -66,9 +67,9 @@ model DishType {
 model Order {
   id          String   @id @default(auto()) @map("_id") @db.ObjectId
   // orderStatus Boolean  @default(true)
-  orderStatus String
+  orderStatus String   @default("new") //new, cooking, finished
   employeeID  String   @db.ObjectId
-  orderNote   String
+  orderNote   String?
   tableID     String?  @unique @db.ObjectId
   updateAt    DateTime @updatedAt
   createAt    DateTime @default(now())
@@ -79,12 +80,13 @@ model Order {
 }
 
 model OrderDetail {
-  id       String   @id @default(auto()) @map("_id") @db.ObjectId
-  dishId   String   @db.ObjectId
-  quantity Int
-  orderID  String   @db.ObjectId
-  updateAt DateTime @updatedAt
-  createAt DateTime @default(now())
+  id                String   @id @default(auto()) @map("_id") @db.ObjectId
+  dishId            String   @db.ObjectId
+  quantity          Int
+  orderID           String   @db.ObjectId
+  updateAt          DateTime @updatedAt
+  createAt          DateTime @default(now())
+  orderDetailStatus String   @default("new") //new, cooking, finished
 
   Dish  Dish  @relation(fields: [dishId], references: [id])
   Order Order @relation(fields: [orderID], references: [id])
@@ -312,6 +314,10 @@ model Invoice {
   employeeID              String   @db.ObjectId
   tableID                 String   @db.ObjectId
   promotionAfterInvoiceID String?  @db.ObjectId
+
+  //CHEATING
+  discount      Float?
+  promotionName String?
 
   //those 2 statuses are not needed
   // createAt                DateTime @default(now())

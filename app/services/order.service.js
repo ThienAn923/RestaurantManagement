@@ -3,6 +3,7 @@ const prisma = require('../../prisma/client'); // Go up two directoriedishs from
 
 class OrderService {
     async createOrder(data) {
+        console.log("Running create Order at order.service.js");
         const {employeeID, tableID, orderNote,orderStatus,orderDetails,OrderDetail} =data;
         const order=  await prisma.order.create({ 
             data: {
@@ -33,21 +34,55 @@ class OrderService {
             where: { id: tableID }, // Sử dụng tableID để tìm bàn
             select: { tableNumber: true } // Chỉ lấy số bàn
         });
+        //Not my fault
         order.tableID = table.tableNumber;
         global.io.emit("orderAdded",order)
-        console.log(order)
+        // console.log(order)
+
+        try {
+            const updatedTable = await prisma.table.update({
+                where: { id: tableID },
+                data: { tableStatus: false },
+            });
+            //why reconstructing the table? because in table.vue, which was written in the beginning, i messed up the table status, so i have to reconstruct it
+            const reconstructedTable = { ...updatedTable, status: updatedTable.tableStatus };
+            global.io.emit("tableUpdate",reconstructedTable);
+            return updatedTable;
+        } catch (error) {
+            console.log(error);
+        }
     }
 
     async getOrderById(id) {
-    try{
-        console.log("Yo");
-        return await prisma.order.findUnique({
-        where: { id },
-        include: { OrderDetail: true }, // Include costs if needed
-        });
-    }catch(error){
-        console.log(error);
-    }
+        try{
+            //as it looks too nesty, im gonna guide you through this.
+            //first, we find the order by id
+            //then we include the orderDetails of that order, and table number too
+            //Then we select the name and cost(and array json) for that dish
+            //Then we select the name of the employee that take that order
+            return await prisma.order.findUnique({
+            where: { id },
+                include: {
+                    Table: {select: {tableNumber: true}},
+                    OrderDetail: {    
+                        include: { 
+                            Dish: {
+                                select : {
+                                    name: true,
+                                    costs: true,
+                                    timeToCook: true,
+                                }
+                            }
+                        },
+                    },
+                    Employee: {
+                        select: { person: {select: {name: true,}}} },
+                    },
+                },
+            );
+        }catch(error){
+            console.log(error);
+        }
     }
 
     async getAllOrders() {
@@ -56,8 +91,7 @@ class OrderService {
     }
 
     async updateOrder(id, data) {
-        console.log(data);
-        console.log(id);
+        console.log('Running updateOrder at order.service.js');
         const { realTableID, ...dataWithoutRealTableID } = data;
         const dataWithTableID = { ...dataWithoutRealTableID, tableID: realTableID }; // Spread the properties
         

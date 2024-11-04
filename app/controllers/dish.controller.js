@@ -31,7 +31,8 @@ class DishController {
 
   async getAllDishes(req, res) {
     try {
-      const dishes = await DishService.getAllDishes();
+      const dishes = await DishService.getAllDishes(req.query.page, req.query.search ,req.query.filter, req.query.filterType);
+      
       res.status(200).json(dishes);
     } catch (error) {
       res.status(500).json({ error: error.message });

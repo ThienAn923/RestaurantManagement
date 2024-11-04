@@ -32,6 +32,16 @@ class TableController {
         }
     }
 
+    async getUsableTables(req, res, next) {
+        try {
+            const tables = await tableService.getUsableTables();
+            res.status(200).json(tables);
+            console.log("Running from getUsableTables in table.controller.js");
+        } catch (error) {
+            return next(new ApiError(500, error.message));
+        }
+    }
+
     async updateTable(req, res, next) {
         try {
             const table = await tableService.updateTable(req.params.id, req.body);

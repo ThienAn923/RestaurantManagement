@@ -28,7 +28,7 @@ app.get("/", (req, res) => {
     res.json({ message: "Welcome to ThienAn Restaurant"});
 });
 app.get("/dish", (req, res) => {
-    res.json({ message: "test"});
+    res.json({ message: "test, (This message was originally just simply Test but at one point, 1AM, i was high and i spend like 30 minutes trying to figure out why the /dish dont work, i was so confused, i was like, i did everything right, why it dont work, then i realized that i forgot to put the /api in front of the /dish, i was so high, i was like bruh)"});
 });
 
 app.use("/login", login)

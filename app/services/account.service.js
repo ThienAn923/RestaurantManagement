@@ -8,9 +8,35 @@ class AccountService {
   }
 
   async getAccountById(id) {
-    return await prisma.account.findUnique({
+    const account =  await prisma.account.findUnique({
       where: { id },
+      include: {
+        Person: {
+          select: {
+            id: true, // Include personId
+            name: true,
+          },
+        },
+      },
     });
+
+    if (!account || !account.Person) {
+      return null;
+    }
+  
+    // Second query to get the employeeId using personId
+    const employee = await prisma.employee.findFirst({
+      where: { personId: account.Person.id },
+      select: { id: true },
+    });
+  
+    return {
+      ...account,
+      Person: {
+        ...account.Person,
+        Employee: employee ? { id: employee.id } : null,
+      },
+    };
   }
 
   async getAllAccounts() {
@@ -36,14 +62,44 @@ class AccountService {
 
 
   //will make username become unique later lmao
+  // This function will be complicated when look at, but just know that it return account -> person -> employee, that's all
+  // The database was not build for account -> person -> employee, so i have to do this
   async getAccountByUsername(username) {
-    return await prisma.account.findFirst({
-        where: { accountUsername: username },
+    // First query to get the personId and name
+    const account = await prisma.account.findFirst({
+      where: { accountUsername: username },
+      include: {
+        Person: {
+          select: {
+            id: true, // Include personId
+            name: true,
+          },
+        },
+      },
     });
+  
+    if (!account || !account.Person) {
+      return null;
+    }
+  
+    // Second query to get the employeeId using personId
+    const employee = await prisma.employee.findFirst({
+      where: { personId: account.Person.id },
+      select: { id: true },
+    });
+  
+    return {
+      ...account,
+      Person: {
+        ...account.Person,
+        Employee: employee ? { id: employee.id } : null,
+      },
+    };
   }
 
   async login(username, password) {
     const account = await this.getAccountByUsername(username);
+    console.log(account);
     if (!account) {
         console.log('No account found for username:', username);
         return null;
@@ -59,7 +115,9 @@ class AccountService {
         { 
             id: account.id,  // Ensure this line is present
             username: account.accountUsername, 
-            authority: account.accountAuthority 
+            authority: account.accountAuthority,
+            name: account.Person.name,
+            employeeId: account.Person.Employee.id // Include EmployeeID in the token payload
         },
         process.env.JWT_SECRET,
         { expiresIn: process.env.JWT_EXPIRATION }

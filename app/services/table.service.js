@@ -17,11 +17,17 @@ class TableService {
     }
 
     async getAllTables() {
-        console.log("get all tables")
         return await prisma.table.findMany({
             where: { isDeleted: false }, // Filter only available tablees
         });
         
+    }
+
+    async getUsableTables() {
+        console.log("Running from getUsableTables in table.service.js");
+        return await prisma.table.findMany({
+            where: { isDeleted: false, tableStatus: true }, // Filter only available tables
+        });
     }
 
     async updateTable(id, data) {
@@ -32,7 +38,10 @@ class TableService {
             where: { id },
             data: updatedData,
         });
-        global.io.emit("tableUpdate",updatedTable);
+        
+        //why reconstructing the table? because in table.vue, which was written in the beginning, i messed up the table status, so i have to reconstruct it
+        const reconstructedTable = { ...updatedTable, status: updatedTable.tableStatus };
+        global.io.emit("tableUpdate",reconstructedTable);
         return updatedTable;
     }
 

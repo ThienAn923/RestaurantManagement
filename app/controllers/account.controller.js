@@ -68,12 +68,19 @@ class AccountController {
                 return next(new ApiError(401, "Invalid username or password"));
             }
 
-            res.status(200).json({ message:"Login successful", token: result.token, user: result.account });
+            res.status(200).json({ 
+                message: "Login successful", 
+                token: result.token, 
+                user: result.account,
+                name: result.account.Person.name, // Include name
+                employeeId: result.account.Person.Employee.id // Include EmployeeID
+            });
         } catch (error) {
             console.error('Error detected:', error);
             return next(new ApiError(500, error.message));
         }
     }
+
 
     async getCurrentUser(req, res, next) {
         try {
