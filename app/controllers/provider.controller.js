@@ -27,9 +27,15 @@ class ProviderController {
         try {
             const page = parseInt(req.query.page) || 1;
             const limit = parseInt(req.query.limit) || 5;
-            const providers = await providerService.getAllProviders(page, limit, req.query.sortColumn, req.query.sortOrder, req.query.filter, req.query.search);
-            res.status(200).json(providers);
-        } catch (error) {
+            if (req.query.page && req.query.limit) {
+                const providers = await providerService.getAllProviders(page, limit, req.query.sortColumn, req.query.sortOrder, req.query.filter, req.query.search);
+                res.status(200).json(providers);
+            } else {
+                const providers = await providerService.getAllProvidersREAL();
+                res.status(200).json(providers);
+            }
+        }
+        catch (error) {
             return next(new ApiError(500, error.message));
         }
     }

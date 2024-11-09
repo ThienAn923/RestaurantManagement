@@ -5,6 +5,7 @@ class ImportInvoiceService {
     async createImportInvoice(data) {
 
         const { employeeId, providerId, importInvoiceDetails } = data;
+        console.log("running from importinsvoice.service. Data:",importInvoiceDetails);
         let totalExpense = 0;
         let quantity=0
         
@@ -25,15 +26,16 @@ class ImportInvoiceService {
         //create import invoice details, calculate totalExpense
         for (const detail of importInvoiceDetails) {
             totalExpense += detail.quantity * detail.price;
-            console.log("AHHHHHHHHHH debug!!!" + detail.quantity + " " + detail.price)
+            console.log("AHHHHHHHHHH debug!!!" + detail.quantity + " " + detail.price + " " + detail.ingredientId + totalExpense)
             quantity+=1
             // const ingredient = await prisma.ingredient.findUnique({ where: { id: detail.ingredientId } });
             // const totalExpenses = detail.quantity * ingredient.price;
-
+            
             const importInvoiceDetail = await prisma.importInvoiceDetail.create({
                 data: {
-                    totalExpense: totalExpense,
+                    totalExpense: detail.quantity * detail.price, // like... stop... stop coding like this, stop coding shits that make the backend got ta fix everything from frontend to backend, stopppp. i fucking hate fixing this function!! The data send from the front end is shit!! Who the fuck code the front end
                     quantity: quantity,
+                    price: detail.price,
                     ImportInvoice: {
                         connect: {id: importInvoice.id}
                     },
@@ -42,7 +44,6 @@ class ImportInvoiceService {
                     }
                 },
             });
-            return importInvoiceDetail;
         }
 
         //update totalExpense
@@ -82,9 +83,9 @@ class ImportInvoiceService {
         // const orderBy = { [sortColumn]: sortOrder };
         
         //support nested sort
-        const orderBy = sortColumn.includes('Provider.')
-            ? { Provider: { providerName: sortOrder } }
-            : { [sortColumn]: sortOrder };
+        // const orderBy = sortColumn.includes('Provider.')
+        //     ? { Provider: { providerName: sortOrder } }
+        //     : { [sortColumn]: sortOrder };
 
         
         // const [importInvoices, totalCount] = await Promise.all([
@@ -129,7 +130,7 @@ class ImportInvoiceService {
             where,
             skip,
             take: limit,
-            orderBy,
+            // orderBy, //bullshit, the sort is not working, so i gotta put it down, fix latter
             select: {
                 id: true,
                 importDate: true,

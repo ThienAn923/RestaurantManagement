@@ -121,6 +121,13 @@ class ProviderService {
             totalPages: Math.ceil(total / limit),
         };
     }
+
+    async getAllProvidersREAL() {
+        const data =  await prisma.provider.findMany({
+            where: { isDeleted: false },
+        });
+        return {data}; //"No!!! Who coded like this, you must me the worst coder ever" STFU, the frontend is expecting an object with key data, so I'm giving it to them
+    }
     async updateProvider(id, data) {
         return await prisma.provider.update({
             where: { id },

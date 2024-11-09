@@ -10,6 +10,8 @@ class InvoiceDetailService {
             where: { invoiceId },
         });
     }
+
+    
 }
 
 module.exports = new InvoiceDetailService();

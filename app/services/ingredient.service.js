@@ -96,6 +96,18 @@ class IngredientService {
         totalPages: Math.ceil(total / limit),
         };
     }
+
+    async getAllIngredientsREAL() {
+        const data = await prisma.ingredient.findMany({
+            where: {
+                isDeleted: false
+            },
+            include: {
+                ingredientType: true
+            }
+        });
+        return {data:data}; //"WHY?" BECAUSE THE FONTEND EXPECTS AN OBJECT WITH A KEY "data" THAT CONTAINS THE ARRAY OF DATA, im gonna cry
+    }
     
 
 

@@ -70,9 +70,12 @@ model Order {
   orderStatus String   @default("new") //new, cooking, finished
   employeeID  String   @db.ObjectId
   orderNote   String?
-  tableID     String?  @unique @db.ObjectId
+  tableID     String?  @db.ObjectId //it was originally have @unique but was requested to change by "The higher authority(my teacher)" :<. Sad fr fr (basicly 1-1 to 1-many relationship)
   updateAt    DateTime @updatedAt
   createAt    DateTime @default(now())
+
+  //new
+  forDate DateTime @default(now()) // only get day month year, order time is not needed, the order is for what day
 
   Employee    Employee      @relation(fields: [employeeID], references: [id])
   Table       Table?        @relation(fields: [tableID], references: [id])
@@ -308,6 +311,7 @@ model Invoice {
   id                      String   @id @default(auto()) @map("_id") @db.ObjectId
   invoiceDate             DateTime @default(now())
   totalCost               Float
+  finalTotalCost          Float
   orderNote               String?
   totalPromotion          Int?
   invoiceStatus           Boolean  @default(false) //true = paid, false = not paid
@@ -542,4 +546,13 @@ model Rating {
 
   Client Client @relation(fields: [clientID], references: [id])
   Dish   Dish   @relation(fields: [dishID], references: [id])
+}
+
+model Expense {
+  id                 String   @id @default(auto()) @map("_id") @db.ObjectId
+  expenseName        String
+  expenseDescription String?
+  expenseMoney       Float
+  createAt           DateTime @default(now())
+  updateAt           DateTime @updatedAt
 }

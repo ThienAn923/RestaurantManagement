@@ -28,8 +28,13 @@ class IngredientController {
         try {
             const page = parseInt(req.query.page) || 1;
             const limit = parseInt(req.query.limit) || 5;
-            const result = await ingredientService.getAllIngredients(page, limit, req.query.sortColumn, req.query.sortOrder, req.query.filter, req.query.search);
-            res.status(200).json(result);
+            if (req.query.page && req.query.limit) {
+                const result = await ingredientService.getAllIngredients(page, limit, req.query.sortColumn, req.query.sortOrder, req.query.filter, req.query.search);
+                res.status(200).json(result);
+            }else{
+                const result = await ingredientService.getAllIngredientsREAL();
+                res.status(200).json(result);
+            }
         } catch (error) {
             return next(new ApiError(500, error.message));
         }

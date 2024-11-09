@@ -9,7 +9,7 @@ class ImportInvoiceController {
         } catch (error) {
           console.log('Error detected:', error);
 
-          return next(new ApiError(500, "An error occurred while creating dish"));
+          return next(new ApiError(500, "An error occurred while creating importInvoice" + error.message));
         }
     }
     

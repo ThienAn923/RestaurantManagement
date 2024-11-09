@@ -4,7 +4,7 @@ const prisma = require('../../prisma/client'); // Go up two directoriedishs from
 class OrderService {
     async createOrder(data) {
         console.log("Running create Order at order.service.js");
-        const {employeeID, tableID, orderNote,orderStatus,orderDetails,OrderDetail} =data;
+        const {employeeID, tableID, orderNote,orderStatus,OrderDetail, forDate} =data;
         const order=  await prisma.order.create({ 
             data: {
                 Employee: {
@@ -15,6 +15,7 @@ class OrderService {
                 },
                 orderNote: orderNote,
                 orderStatus: orderStatus,
+                forDate: forDate,
             }   
         });
         for (const orderDetail of OrderDetail) {

@@ -32,6 +32,42 @@ class InvoiceController {
             return next(new ApiError(500, error.message));
         }
     }
+
+    async getTotalIncome(req, res, next) {
+        try {
+            const totalIncome = await invoiceService.getTotalIncome();
+            res.status(200).json(totalIncome);
+        } catch (error) {
+            return next(new ApiError(500, error.message));
+        }
+    }
+
+    async getRecentInvoice(req, res, next) {
+        try {
+            const recentInvoice = await invoiceService.getRecentInvoice();
+            res.status(200).json(recentInvoice);
+        } catch (error) {
+            return next(new ApiError(500, error.message));
+        }
+    }
+
+    async getTopDish(req, res, next) {
+        try {
+            const topDish = await invoiceService.getTopDish();
+            res.status(200).json(topDish);
+        } catch (error) {
+            return next(new ApiError(500, error.message));
+        }
+    }
+
+    async getIncomeData(req, res, next) {
+        try {
+            const incomeData = await invoiceService.getIncomeData();
+            res.status(200).json(incomeData);
+        } catch (error) {
+            return next(new ApiError(500, error.message));
+        }
+    }
 }
 
 module.exports = new InvoiceController();
