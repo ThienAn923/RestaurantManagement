@@ -1,6 +1,7 @@
 const prisma = require('../../prisma/client');
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
+const cloudinary = require('../config/cloudinary');
 
 class AccountService {
   async createDish(data) {
@@ -140,7 +141,12 @@ class AccountService {
       },
     });
   }
+
+  
 }
+
+
+
 
 
 module.exports = new AccountService();

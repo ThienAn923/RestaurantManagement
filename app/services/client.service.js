@@ -1,4 +1,5 @@
 const prisma = require('../../prisma/client');
+const cloudinary = require('../config/cloudinary');
 
 class ClientService {
     async createClient(data) {
@@ -112,6 +113,13 @@ class ClientService {
 
         return { client, person };
     }
+
+    async testImageUpload() {
+    console.log("Running testImageUpload from AccountService");
+    const imagePath = 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSMcA2mtIS-z0Ne72z5P1VgzbnRkDcoeWhLfw&s';
+    const publicId = await cloudinary.uploadImage(imagePath);
+    console.log(publicId);
+     }
 }
 
 

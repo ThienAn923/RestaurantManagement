@@ -1,6 +1,6 @@
 const { subDays, subWeeks, subMonths, startOfDay, startOfWeek, startOfMonth } = require('date-fns');
 const { PrismaClient } = require('@prisma/client');
-const { table } = require('../../prisma/client');
+const { table, promotion } = require('../../prisma/client');
 const prisma = new PrismaClient();
 
 class InvoiceService {
@@ -87,15 +87,84 @@ class InvoiceService {
                 orderBy: { createAt: 'desc' },
             });
             invoiceDetailCost = orderDetail.quantity * latestCost.cost;
+            
+            let promotionName = null;
+            let discount = 0;
+
+            const dish = await prisma.dish.findUnique({
+                where: { id: orderDetail.dishId },
+                include: { promotion: true },
+            });
+
+            if (dish?.promotion?.promotionID) {
+                const promotionAfterDish = dish.promotion;
+                const promotion = await prisma.promotion.findUnique({
+                    where: { id: promotionAfterDish.promotionID },
+                });
+
+                const currentDate = new Date();
+                if (promotion && currentDate < new Date(promotion.endDate)) {
+                    promotionName = promotion.promotionName;
+                    discount = promotion.discount;
+                }
+            }
+
+            const totalCost = invoiceDetailCost - (invoiceDetailCost * discount) / 100;
+
+            
             await prisma.invoiceDetail.create({
                 data: {
                     quantity: orderDetail.quantity,
                     dishID: orderDetail.dishId,
                     invoiceID: invoice.id,
-                    totalCost: invoiceDetailCost,
+                    totalCost: totalCost,
+                    discount: discount,
+                    originalPrice: invoiceDetailCost/orderDetail.quantity,
+                    promotionName: promotionName,
+                    promotionAfterDishID: dish.promotion?.id, 
                 },
             });
         }
+
+
+
+
+
+        //The reason for this part of code is to update the total cost
+        // dude to the promotion after dish invoice
+        // "So, the field finalTotalCost upper are useless, right?"
+        // You are correct, they're just... there, there's number, but not really accurate
+        //If there is a promotion after dish, then we have to recalculate the total cost
+        // Recalculate total cost of invoice
+        const invoiceDetails = await prisma.invoiceDetail.findMany({
+            where: { invoiceID: invoice.id },
+        });
+
+        let recalculatedTotalCost = 0;
+        for (const detail of invoiceDetails) {
+            recalculatedTotalCost += detail.totalCost;
+            console.log("Recalculated total cost: ", recalculatedTotalCost, "Detail total cost: ", detail.totalCost);
+        }
+
+        const finalTotalCost = recalculatedTotalCost - (promotion.discount / 100 * recalculatedTotalCost);
+
+        // Update invoice with recalculated total cost and final total cost
+        
+        try{
+            console.log("invoice: ", invoice.id, "finalTotalCost: ", finalTotalCost);
+            const updatedInvoice = await prisma.invoice.update({
+                where: { id: invoice.id },
+                data: {
+                finalTotalCost: finalTotalCost,
+                },
+            });
+            console.log("Updated invoice: ", updatedInvoice);
+        }catch(error){"Error at invoice.service.js, line 160", console.log(error.message);}
+
+
+
+
+
         
         //IMPORTANT PART!!
         //finally delete the order detail
@@ -195,6 +264,9 @@ class InvoiceService {
                 totalCost: detail.totalCost,
                 createAt: detail.createAt,
                 salePerUnit: detail.salesPerUnit,
+                discount: detail.discount,
+                promotionName: detail.promotionName,
+                originalPrice: detail.originalPrice,
                 promotionAfterDishID: detail.promotionAfterDishID
 
             }))
@@ -271,6 +343,9 @@ class InvoiceService {
             totalCost: detail.totalCost,
             createAt: detail.createAt,
             salePerUnit: detail.salesPerUnit,
+            discount: detail.discount,
+            promotionName: detail.promotionName,
+            originalPrice: detail.originalPrice,
             promotionAfterDishID: detail.promotionAfterDishID
 
         }))
@@ -292,6 +367,14 @@ class InvoiceService {
         include: { table: true },
         });
         return invoice.table;
+    }
+
+    async updateInvoice(id, data) {
+        const invoice = await prisma.invoice.update({
+            where: { id },
+            data,
+        });
+        return invoice;
     }
 
     async getEmlpoyeeAfterInvoice(invoiceId){

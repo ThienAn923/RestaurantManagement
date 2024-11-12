@@ -33,6 +33,7 @@ class PromotionController{
 
     async createPromotion(req, res, next) {
         try {
+            console.log(req.body);
             const { promotionType, dishes, minimumSpend, promotionLimit, ...promotionData } = req.body;
 
             const promotion = await prisma.promotion.create({
@@ -53,11 +54,11 @@ class PromotionController{
                         promotionID: promotion.id
                     }
                 });
-
+                console.log(dishes);
                 await prisma.dish.updateMany({
                     where: { id: { in: dishes } },
                     data: {
-                        promotionAfterDishId: promotionAfterDish.id
+                        promotionID: promotionAfterDish.id
                     }
                 });
             } else {

@@ -145,6 +145,8 @@ class AccountController {
     //         return next(new ApiError(500, error.message));
     //     }
     // }
+
+    
 }
 
 module.exports = new AccountController();

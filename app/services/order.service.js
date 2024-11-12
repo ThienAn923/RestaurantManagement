@@ -41,14 +41,19 @@ class OrderService {
         // console.log(order)
 
         try {
-            const updatedTable = await prisma.table.update({
-                where: { id: tableID },
-                data: { tableStatus: false },
-            });
-            //why reconstructing the table? because in table.vue, which was written in the beginning, i messed up the table status, so i have to reconstruct it
-            const reconstructedTable = { ...updatedTable, status: updatedTable.tableStatus };
-            global.io.emit("tableUpdate",reconstructedTable);
-            return updatedTable;
+            // Update table status to false IF, IF, the order is for today, else, just skip
+            if(order.forDate === new Date().toISOString()){{
+                const updatedTable = await prisma.table.update({
+                    where: { id: tableID },
+                    data: { tableStatus: false },
+                });
+            
+                //why reconstructing the table? because in table.vue, which was written in the beginning, i messed up the table status, so i have to reconstruct it
+                const reconstructedTable = { ...updatedTable, status: updatedTable.tableStatus };
+                global.io.emit("tableUpdate",reconstructedTable);
+                return updatedTable;
+                }
+            }
         } catch (error) {
             console.log(error);
         }

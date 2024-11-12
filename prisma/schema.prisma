@@ -255,7 +255,7 @@ model Promotion {
 
 model PromotionAfterDish {
   id          String   @id @default(auto()) @map("_id") @db.ObjectId
-  promotionID String   @db.ObjectId
+  promotionID String   @db.ObjectId // pointed to it's daddy ;3 (inheritate)
   isDeleted   Boolean  @default(false)
   updateAt    DateTime @updatedAt
   createAt    DateTime @default(now())
@@ -337,13 +337,19 @@ model Invoice {
 }
 
 model invoiceDetail {
-  id                   String   @id @default(auto()) @map("_id") @db.ObjectId
-  invoiceID            String   @db.ObjectId
-  dishID               String   @db.ObjectId
-  quantity             Int
-  totalCost            Int
-  salePerUnit          Int?
+  id          String @id @default(auto()) @map("_id") @db.ObjectId
+  invoiceID   String @db.ObjectId
+  dishID      String @db.ObjectId
+  quantity    Int
+  totalCost   Int
+  salePerUnit Int?
+
+  //CHEATING
+  //I know those 2 fields below violate the database rule (and also the CDM), but if i dont add this line, the logic for calculate invoice will be extremely difficult, and i MEAN it!!! DO NOT do it, you will waste your time
   promotionAfterDishID String?  @db.ObjectId
+  discount             Float?
+  originalPrice        Float
+  promotionName        String?
   createAt             DateTime @default(now())
 
   //Please note that the promotionAfterDishID is not required, it's optional
@@ -555,4 +561,5 @@ model Expense {
   expenseMoney       Float
   createAt           DateTime @default(now())
   updateAt           DateTime @updatedAt
+  isDeleted          Boolean  @default(false)
 }

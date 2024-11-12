@@ -30,7 +30,7 @@ class ExpenseController {
             const { page = 1, limit = 5 } = req.query
             let result
             if(req.query.page && req.query.limit) {
-                result = await expenseService.getAllExpenses(parseInt(page), parseInt(limit))
+                result = await expenseService.getAllExpenses(parseInt(page), parseInt(limit), req.query.sortColumn, req.query.sortOrder, req.query.search)
             } else {
                 result = await expenseService.getAllExpensesREAL()
             }
@@ -45,7 +45,7 @@ class ExpenseController {
             const updatedExpense = await expenseService.updateExpense(req.params.id, req.body);
             res.status(200).json(updatedExpense);
         } catch (error) {
-            return next(new ApiError(500, "An error occurred while updating expense"), error.message);
+            return next(new ApiError(500, "An error occurred while updating expense" + error.message));
         }
     }
 
@@ -54,7 +54,7 @@ class ExpenseController {
             await expenseService.deleteExpense(req.params.id);
             res.status(204).json();
         } catch (error) {
-            return next(new ApiError(500, "An error occurred while deleting expense"), error.message);
+            return next(new ApiError(500, "An error occurred while deleting expense" + error.message));
         }
     }
 

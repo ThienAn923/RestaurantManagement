@@ -54,6 +54,12 @@ class ClientController {
             return next(new ApiError(500, "An error occurred while deleting client"));
         }
     }
+
+    async testImageUpload(req, res, next) {
+        console.log("you are in testImageUpload from account.controller.js");
+        clientService.testImageUpload(req, res, next);
+        
+    }
 }
 
 module.exports = new ClientController();
