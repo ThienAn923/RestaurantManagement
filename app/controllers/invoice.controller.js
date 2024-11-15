@@ -68,6 +68,15 @@ class InvoiceController {
             return next(new ApiError(500, error.message));
         }
     }
+
+    async getCustomIncomeData(req, res, next) {
+        try {
+            const incomeData = await invoiceService.customGetIncomeData(req.query.startDate, req.query.endDate, req.query.step);
+            res.status(200).json(incomeData);
+        } catch (error) {
+            return next(new ApiError(500, error.message));
+        }
+    }
 }
 
 module.exports = new InvoiceController();

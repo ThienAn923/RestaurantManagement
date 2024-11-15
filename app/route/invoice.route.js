@@ -9,6 +9,8 @@ router.route("/")
 //This is named getTotalIncome, but it actually returns both income and multiple type of expense, too lazy to change
 router.route("/getTotalIncome")
     .get(InvoiceController.getTotalIncome)
+router.route ("/getCustomIncome")
+    .get(InvoiceController.getCustomIncomeData)
 
 router.route("/recentInvoice")
     .get(InvoiceController.getRecentInvoice)

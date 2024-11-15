@@ -1,6 +1,5 @@
-const { subDays, subWeeks, subMonths, startOfDay, startOfWeek, startOfMonth } = require('date-fns');
+const { startOfWeek, startOfMonth, parseISO, formatISO, startOfDay} = require('date-fns');
 const { PrismaClient } = require('@prisma/client');
-const { table, promotion } = require('../../prisma/client');
 const prisma = new PrismaClient();
 
 class InvoiceService {
@@ -558,7 +557,7 @@ class InvoiceService {
         };
     }
 
-        async getIncomeData() {
+    async getIncomeData() {
         const incomeData = {
             day: [],
             week: [],
@@ -571,8 +570,11 @@ class InvoiceService {
         const startOfThisWeek = startOfWeek(today);
         const startOfThisMonth = startOfMonth(today);
         const startOfThisYear = new Date(today.getFullYear(), 0, 1);
+
+        console.log("Today, start of today, start of this week, start of this month, start of this year: ", today, startOfToday, startOfThisWeek, startOfThisMonth, startOfThisYear);
     
         // Helper function to get income data for a given period
+        //not used
         const getIncomeDataForPeriod = async (startDate, endDate, timeUnit) => {
             const incomeDataPoints = await prisma.invoice.groupBy({
                 by: [timeUnit],
@@ -814,6 +816,74 @@ class InvoiceService {
     
         return incomeData;
     }
+
+        
+    
+    async customGetIncomeData(startDay, endDate, step) {
+    try {
+        const incomeData = {
+            day: [],
+        };
+        step = parseInt(step); // Ensure step is an integer
+
+        const startDate = parseISO(startDay);
+        const endDateObj = parseISO(endDate);
+        const startOfEndDate = startOfDay(endDateObj);
+        console.log("Start date, end date, start of end date: ", startDate, endDateObj, startOfEndDate, step);
+
+        // Get income data for each range of days from startDay to endDate with the specified step
+        for (let date = new Date(startDate); date <= startOfEndDate; date.setDate(date.getDate() + step)) {
+            const rangeStart = new Date(date);
+            const rangeEnd = new Date(date);
+            rangeEnd.setDate(rangeEnd.getDate() + step - 1);
+
+            if (rangeEnd > startOfEndDate) {
+                rangeEnd.setDate(startOfEndDate.getDate());
+            }
+
+            const income = await prisma.invoice.aggregate({
+                _sum: { finalTotalCost: true },
+                where: {
+                    invoiceDate: {
+                        gte: startOfDay(rangeStart),
+                        lt: startOfDay(new Date(rangeEnd.getTime() + 24 * 60 * 60 * 1000)),
+                    },
+                },
+            });
+            const expense = await prisma.expense.aggregate({
+                _sum: { expenseMoney: true },
+                where: {
+                    createAt: {
+                        gte: startOfDay(rangeStart),
+                        lt: startOfDay(new Date(rangeEnd.getTime() + 24 * 60 * 60 * 1000)),
+                    },
+                },
+            });
+            const ingredientCost = await prisma.importInvoice.aggregate({
+                _sum: { totalExpense: true },
+                where: {
+                    createAt: {
+                        gte: startOfDay(rangeStart),
+                        lt: startOfDay(new Date(rangeEnd.getTime() + 24 * 60 * 60 * 1000)),
+                    },
+                },
+            });
+
+            incomeData.day.push({
+                timeUnit: `${rangeStart.getDate()}-${rangeEnd.getDate()}/${rangeStart.getMonth() + 1}/${rangeStart.getFullYear()}`,
+                income: income._sum.finalTotalCost || 0,
+                expense: expense._sum.expenseMoney || 0,
+                ingredientCost: ingredientCost._sum.totalExpense || 0,
+            });
+        }
+
+        return incomeData;
+    } catch (error) {
+        console.log(error.message);
+    }
+}
+
+
 }
 
 module.exports = new InvoiceService();
