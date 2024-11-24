@@ -5,7 +5,7 @@ const http = require("http").Server(app);
 const io = require("socket.io")(http, {
   cors: {
     origin: "http://localhost:5173", // Địa chỉ client của bạn
-    methods: ["GET", "POST"],
+    methods: ["GET", "POST", "PUT", "DELETE"], // Các phương thức cho phép
     allowedHeaders: ["my-custom-header"],
     credentials: true, // Nếu bạn cần gửi cookie
   },
@@ -14,14 +14,31 @@ global.io = io;
 const config = require("./app/config");
 const MongoDB = require("./app/utils/mongodb.util");
 
+//new
+const MessageService = require("./app/services/messageChat.service");
+
 async function startServer() {
   try {
     await MongoDB.connect(config.db.uri);
     console.log("Connected to the database");
     const PORT = config.app.port;
     io.on("connection", (socket) => {
-      console.log(socket.id); // Đảm bảo console.log(socket.id) nằm trong hàm callback
+      console.log(`New connection: ${socket.id}`);
+      socket.on("OnConnected", (user) => {
+        console.log(user);
+      });
+      MessageService.getAllMessages().then((messages) => {
+        socket.emit("allMessages", messages);
+        console.log(messages);
+      });
+
+      socket.on("sendMessage", async (messageData) => {
+        await MessageService.createMessage(messageData); // Tạo tin nhắn mới trong cơ sở dữ liệu
+        io.emit("messageCreated", messageData);
+        // Phát tin nhắn cho tất cả người dùng
+      });
     });
+
     http.listen(PORT, () => {
       console.log(`Server running at port: ${PORT}`);
     });

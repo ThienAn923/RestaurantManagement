@@ -21,6 +21,10 @@ const orderDetailRouter = require("./app/route/orderDetail.route");
 const expenseRouter = require("./app/route/expense.route");
 const clientTemporaryRouter = require("./app/route/clientTemporary.route");
 
+//merge
+const roomChatRouter = require("./app/route/roomChat.route");
+const messageChatRouter = require("./app/route/messageChat.route");
+
 const ApiError = require("./app/api-error");
 
 app.use(cors());
@@ -73,6 +77,10 @@ app.use("/api/orderDetail", orderDetailRouter);
 app.use("/api/expense", expenseRouter);
 
 app.use("/api/clientTemporary", clientTemporaryRouter);
+
+app.use("/api/messageChat", messageChatRouter);
+
+app.use("/api/roomChat", roomChatRouter);
 
 app.use((err, req, res, next) => {
   return res.status(err.statusCode || 500).json({
