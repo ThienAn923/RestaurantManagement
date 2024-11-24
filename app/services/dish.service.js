@@ -1,9 +1,8 @@
 // dish.service.js
-const prisma = require('../../prisma/client'); // Go up two directories from 'service' to 'project' then into 'prisma'
+const prisma = require("../../prisma/client"); // Go up two directories from 'service' to 'project' then into 'prisma'
 
 class DishService {
   async createDish(data) {
-    
     const { DishName, DishDescription, imageLinks, Cost, DishType } = data;
     const dish = await prisma.dish.create({
       data: {
@@ -15,7 +14,7 @@ class DishService {
       },
     });
 
-    const cost = await prisma.cost.create({ 
+    const cost = await prisma.cost.create({
       data: {
         cost: Cost,
         dishId: dish.id,
@@ -28,12 +27,12 @@ class DishService {
     // "https://example.com/image3.jpg"
     // ];
     for (const imageLink of imageLinks) {
-        await prisma.image.create({
-            data: {
-                Link: imageLink,
-                dishId: dish.id,
-            },
-        });
+      await prisma.image.create({
+        data: {
+          Link: imageLink,
+          dishId: dish.id,
+        },
+      });
     }
 
     // for (const ingredientId of ingredients) {
@@ -46,19 +45,18 @@ class DishService {
     // }
 
     return dish;
-
   }
 
   async getDishById(id) {
     return await prisma.dish.findUnique({
       where: { id },
-      include: { 
+      include: {
         //get the fisrt cost order by createAt
-        costs: {orderBy: {createAt : 'desc'}, take:1,},
+        costs: { orderBy: { createAt: "desc" }, take: 1 },
         images: true,
         DishType: {
           select: { id: true, DishTypeName: true },
-        }
+        },
         // dishIngredients: {
         //   include: { ingredient: true },
         // },
@@ -69,7 +67,7 @@ class DishService {
   // async getAllDishes() {
   //   return await prisma.dish.findMany({
   //     where: { isDeleted: false }, // Filter only available dishes
-  //     include: { 
+  //     include: {
   //       costs: {orderBy: {createAt : 'desc'}, take:1,},
   //       images: true,
   //       DishType: {
@@ -82,51 +80,60 @@ class DishService {
   //   });
   // }
 
-  async getAllDishes( page = 1, search = '',filter = 'AllStatus', filterType = 'AllType', sortColumn = 'createAt', sortOrder = 'desc',) {
+  async getAllDishes(
+    page = 1,
+    search = "",
+    filter = "AllStatus",
+    filterType = "AllType",
+    sortColumn = "createAt",
+    sortOrder = "desc"
+  ) {
     let where;
     console.log(filter, filterType, search);
-    if (filter !== 'AllStatus') filter = filter === 'Available' ? true : false; //change filter to boolean
-    
-    if (filter !== 'AllStatus' || search !== '' || filterType !== 'AllType') {
-        where = {
-            isDeleted: false,
-            //And condition combined filter and search, if filter is not AllStatus, add providerStatus to where
-            //If search is not empty, add OR condition to where to search by providerName, providerEmail, providerPhoneNumber, providerStatus    
-            AND: [
-                ...(filter !== 'AllStatus' ? [{ available: filter }] : []),
-                ...(filterType !== 'AllType' ? [{ dishType: filterType }] : []),
-                ...(search !== '' ? [
-                    {
-                        OR: [
-                            { name: { contains: search } },
-                            //I will allow search by dishtype later
-                            // { description: { contains: search } },
-                        ]
-                    }
-                ] : [])
-            ]
-        };
-      }else where = { isDeleted: false };
+    if (filter !== "AllStatus") filter = filter === "Available" ? true : false; //change filter to boolean
 
-      const [data,total] = await Promise.all([ prisma.dish.findMany({
-          where,
-          orderBy: { [sortColumn]: sortOrder },
-          include: { 
-            costs: {orderBy: {createAt : 'desc'}, take:1,},
-            images: true,
-            DishType: {
-              select: { id: true, DishTypeName: true },
-            },
+    if (filter !== "AllStatus" || search !== "" || filterType !== "AllType") {
+      where = {
+        isDeleted: false,
+        //And condition combined filter and search, if filter is not AllStatus, add providerStatus to where
+        //If search is not empty, add OR condition to where to search by providerName, providerEmail, providerPhoneNumber, providerStatus
+        AND: [
+          ...(filter !== "AllStatus" ? [{ available: filter }] : []),
+          ...(filterType !== "AllType" ? [{ dishType: filterType }] : []),
+          ...(search !== ""
+            ? [
+                {
+                  OR: [
+                    { name: { contains: search } },
+                    //I will allow search by dishtype later
+                    // { description: { contains: search } },
+                  ],
+                },
+              ]
+            : []),
+        ],
+      };
+    } else where = { isDeleted: false };
+
+    const [data, total] = await Promise.all([
+      prisma.dish.findMany({
+        where,
+        orderBy: { [sortColumn]: sortOrder },
+        include: {
+          costs: { orderBy: { createAt: "desc" }, take: 1 },
+          images: true,
+          DishType: {
+            select: { id: true, DishTypeName: true },
           },
-          
-        }),
-        prisma.Dish.count({ where }),
-      ]);
+        },
+      }),
+      prisma.Dish.count({ where }),
+    ]);
 
-      return {
-        data,
-        total,
-      }
+    return {
+      data,
+      total,
+    };
   }
 
   async updateDish(id, data) {
@@ -144,7 +151,7 @@ class DishService {
       },
     });
 
-    const cost = await prisma.cost.create({ 
+    const cost = await prisma.cost.create({
       data: {
         cost: data.cost,
         dishId: data.id,
@@ -152,15 +159,15 @@ class DishService {
     });
 
     for (const imageLink of data.imageLinks) {
-        await prisma.image.create({
-            data: {
-                Link: imageLink,
-                dishId: dish.id,
-            },
-        });
+      await prisma.image.create({
+        data: {
+          Link: imageLink,
+          dishId: dish.id,
+        },
+      });
     }
 
-    return {dish, cost};
+    return { dish, cost };
   }
 
   async deleteDish(id) {
@@ -170,7 +177,7 @@ class DishService {
       data: { isDeleted: true },
     });
   }
-  
+
   async getIngredientsByDishId(dishId) {
     return await prisma.dishIngredient.findMany({
       where: { dishId },
@@ -179,6 +186,4 @@ class DishService {
   }
 }
 
-
 module.exports = new DishService();
-

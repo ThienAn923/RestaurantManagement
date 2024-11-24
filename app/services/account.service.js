@@ -1,7 +1,6 @@
-const prisma = require('../../prisma/client');
-const bcrypt = require('bcrypt');
-const jwt = require('jsonwebtoken');
-const cloudinary = require('../config/cloudinary');
+const prisma = require("../../prisma/client");
+const bcrypt = require("bcrypt");
+const jwt = require("jsonwebtoken");
 
 class AccountService {
   async createDish(data) {
@@ -9,7 +8,7 @@ class AccountService {
   }
 
   async getAccountById(id) {
-    const account =  await prisma.account.findUnique({
+    const account = await prisma.account.findUnique({
       where: { id },
       include: {
         Person: {
@@ -24,13 +23,13 @@ class AccountService {
     if (!account || !account.Person) {
       return null;
     }
-  
+
     // Second query to get the employeeId using personId
     const employee = await prisma.employee.findFirst({
       where: { personId: account.Person.id },
       select: { id: true },
     });
-  
+
     return {
       ...account,
       Person: {
@@ -61,7 +60,6 @@ class AccountService {
     });
   }
 
-
   //will make username become unique later lmao
   // This function will be complicated when look at, but just know that it return account -> person -> employee, that's all
   // The database was not build for account -> person -> employee, so i have to do this
@@ -78,17 +76,17 @@ class AccountService {
         },
       },
     });
-  
+
     if (!account || !account.Person) {
       return null;
     }
-  
+
     // Second query to get the employeeId using personId
     const employee = await prisma.employee.findFirst({
       where: { personId: account.Person.id },
       select: { id: true },
     });
-  
+
     return {
       ...account,
       Person: {
@@ -102,30 +100,33 @@ class AccountService {
     const account = await this.getAccountByUsername(username);
     console.log(account);
     if (!account) {
-        console.log('No account found for username:', username);
-        return null;
+      console.log("No account found for username:", username);
+      return null;
     }
-    
-    const isPasswordValid = await bcrypt.compare(password, account.accountPassword);
+
+    const isPasswordValid = await bcrypt.compare(
+      password,
+      account.accountPassword
+    );
     if (!isPasswordValid) {
-        console.log('Invalid password for username:', username);
-        return null;
+      console.log("Invalid password for username:", username);
+      return null;
     }
 
     const token = jwt.sign(
-        { 
-            id: account.id,  // Ensure this line is present
-            username: account.accountUsername, 
-            authority: account.accountAuthority,
-            name: account.Person.name,
-            employeeId: account.Person.Employee.id // Include EmployeeID in the token payload
-        },
-        process.env.JWT_SECRET,
-        { expiresIn: process.env.JWT_EXPIRATION }
+      {
+        id: account.id, // Ensure this line is present
+        username: account.accountUsername,
+        authority: account.accountAuthority,
+        name: account.Person.name,
+        employeeId: account.Person.Employee.id, // Include EmployeeID in the token payload
+      },
+      process.env.JWT_SECRET,
+      { expiresIn: process.env.JWT_EXPIRATION }
     );
 
     return { token, account };
-}
+  }
 
   async hashPassword(password) {
     return await bcrypt.hash(password, 10);
@@ -141,13 +142,6 @@ class AccountService {
       },
     });
   }
-
-  
 }
 
-
-
-
-
 module.exports = new AccountService();
-

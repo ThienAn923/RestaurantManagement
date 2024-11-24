@@ -126,7 +126,7 @@ model Booking {
 model Client {
   id          String   @id @default(auto()) @map("_id") @db.ObjectId
   point       Int
-  personId    String   @unique
+  personId    String   @db.ObjectId
   email       String?  @unique
   phoneNumber String?  @unique
   gender      Boolean? @default(true)
@@ -135,13 +135,15 @@ model Client {
   createAt    DateTime @default(now())
 
   Booking      Booking[]
-  Person       Person[] //Hold on, does this mean client content person, which... sound weird, need to rethink?
-  voucherUnit  voucherUnit[]
+  person       Person         @relation(fields: [personId], references: [id])
   Feedback     Feedback[]
   comment      comment[]
   commentReply commentReply[]
   Rating       Rating[]
-  pointUsage   pointUsage[]
+  // voucherUnit  voucherUnit[]
+  Room         Room[]
+  Message      Message[]
+  voucherUnit  voucherUnit[] //not ussed
 }
 
 model Person {
@@ -155,8 +157,8 @@ model Person {
   employeeId String?    @db.ObjectId
   clientId   String?    @db.ObjectId
   account    account[]
-  Client     Client?    @relation(fields: [clientId], references: [id])
   Employee   Employee[]
+  Client     Client[]
 }
 
 model Employee {
@@ -179,6 +181,8 @@ model Employee {
   Invoice       Invoice[]
   person        Person          @relation(fields: [personId], references: [id])
   Department    Department[]
+  Room          Room[]
+  Message       Message[]
 }
 
 model account {
@@ -192,7 +196,13 @@ model account {
   updateAt         DateTime @updatedAt
   createAt         DateTime @default(now())
 
-  Person Person @relation(fields: [personId], references: [id])
+  //Why is those important field is "?"
+  //Because employee account do not need those
+  //Client's account is more complicated than employee account 
+  isVerified        Boolean?  @default(false)
+  verificationToken String?
+  tokenExpiresAt    DateTime?
+  Person            Person    @relation(fields: [personId], references: [id])
 }
 
 //new
@@ -292,17 +302,18 @@ model PromotionToInvoice {
 }
 
 //shows history of point usage of client in each invoice
-model pointUsage {
-  id        String   @id @default(auto()) @map("_id") @db.ObjectId
-  pointUsed Int
-  invoiceID String   @db.ObjectId
-  clientID  String   @db.ObjectId
-  updateAt  DateTime @updatedAt
-  createAt  DateTime @default(now())
+//No need for this because i can just add the point usage in the invoice model
+// model pointUsage {
+//   id        String   @id @default(auto()) @map("_id") @db.ObjectId
+//   pointUsed Int
+//   invoiceID String   @db.ObjectId
+//   clientID  String   @db.ObjectId
+//   updateAt  DateTime @updatedAt
+//   createAt  DateTime @default(now())
 
-  Client  Client  @relation(fields: [clientID], references: [id])
-  Invoice Invoice @relation(fields: [invoiceID], references: [id])
-}
+//   Client  Client  @relation(fields: [clientID], references: [id])
+//   Invoice Invoice @relation(fields: [invoiceID], references: [id])
+// }
 
 //this model only ecept 1 promotion for 1 invoice at a time
 //if you want to add more promotion for 1 invoice, another model like "promotionOfInvoice" should be created
@@ -318,6 +329,8 @@ model Invoice {
   employeeID              String   @db.ObjectId
   tableID                 String   @db.ObjectId
   promotionAfterInvoiceID String?  @db.ObjectId
+  pointEarned             Int?
+  pointUsed               Int?
 
   //CHEATING
   discount      Float?
@@ -332,7 +345,6 @@ model Invoice {
   Table                 Table                  @relation(fields: [tableID], references: [id])
   invoiceDetail_list    invoiceDetail[]
   Payment               Payment[]
-  pointUsage            pointUsage[]
   PromotionToInvoice    PromotionToInvoice[]
 }
 
@@ -562,4 +574,39 @@ model Expense {
   createAt           DateTime @default(now())
   updateAt           DateTime @updatedAt
   isDeleted          Boolean  @default(false)
+}
+
+model ClientTemporary {
+  id          String   @id @default(auto()) @map("_id") @db.ObjectId
+  point       Int      @default(0)
+  name        String
+  phoneNumber String
+  createAt    DateTime @default(now())
+  updateAt    DateTime @updatedAt
+  // isDeleted   Boolean  @default(false) (THis probably don't need this, i plan to delete this after the user have an actual account)
+}
+
+model Room {
+  id         String    @id @default(auto()) @map("_id") @db.ObjectId
+  roomKey    String
+  clientId   String    @db.ObjectId
+  employeeId String    @db.ObjectId
+  messages   Message[]
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+
+  client   Client   @relation(fields: [clientId], references: [id])
+  employee Employee @relation(fields: [employeeId], references: [id])
+}
+
+model Message {
+  id             String    @id @default(auto()) @map("_id") @db.ObjectId
+  text           String
+  senderId       String    @db.ObjectId
+  roomId         String    @db.ObjectId
+  senderType     Boolean
+  clientSender   Client?   @relation(fields: [senderId], references: [id])
+  employeeSender Employee? @relation(fields: [senderId], references: [id])
+  room           Room      @relation(fields: [roomId], references: [id])
+  createdAt      DateTime  @default(now())
 }

@@ -1,127 +1,193 @@
-const prisma = require('../../prisma/client');
-const cloudinary = require('../config/cloudinary');
-
+const prisma = require("../../prisma/client");
 class ClientService {
-    async createClient(data) {
-        //profilePicture should be default by the "default avatar link"
-        const { name, profilePicture, point } = data;
-    
-        //create a person
-        const person = await prisma.person.create({
-            data: {
-                name: name,
-                profilePicture: profilePicture,
-            }
-        });
+  async createClient(data) {
+    //profilePicture should be default by the "default avatar link"
+    const {
+      name,
+      profilePicture,
+      phoneNumber,
+      verificationToken,
+      tokenExpiresAt,
+      gender,
+    } = data;
 
-        //create an client linked to that person
-        const client = await prisma.client.create({
-            data: {
-                point,
-                personId: person.id,
-            }
-        });
+    //create a person
+    const person = await prisma.person.create({
+      data: {
+        name: name,
+        profilePicture: "",
+      },
+    });
 
-        const account = await prisma.account.create({
-            data: {
-                accountUsername: name,
-                accountPassword: '123456',
-                accountAuthory: 2,  //2 for clients
-            }
-        });
+    //create an client linked to that person
+    const client = await prisma.client.create({
+      data: {
+        phoneNumber: phoneNumber,
+        email: "",
+        point: 0,
+        personId: person.id,
+        gender: gender,
+      },
+    });
 
-        return client;
-    }
+    const account = await prisma.account.create({
+      data: {
+        verificationToken: verificationToken,
+        tokenExpiresAt: tokenExpiresAt,
+        accountUsername: name,
+        accountPassword: "123456",
+        AccountAuthority: 2,
+        personId: person.id,
+      },
+    });
 
-    async getClientById(id) {
-        return await prisma.client.findUnique({
-            where: { id },
-            include:{
-                person: true,
-                account: true,
-            },
-        });
-    }
+    return client;
+  }
 
-    async getAllClients() {
-        return await prisma.client.findMany({
-        where: { isDeleted: false },
-        include:{
-            Person: true,
+  async getClientById(id) {
+    return await prisma.client.findUnique({
+      where: { id },
+      include: {
+        person: {
+          include: {
             account: true,
+          },
         },
-        });
-    }
+      },
+    });
+  }
 
-    async updateClient(id, data) {
-        const { name, profilePicture, point, accountUsername, accountPassword} = data;
-        const client = await prisma.client.findUnique({
-            where: { id },
-            include: { person: true,
+  async getAllClients(
+    page = 1,
+    limit = 30,
+    sortColumn = "createAt",
+    sortOrder = "desc",
+    search = ""
+  ) {
+    try {
+      let where = { isDeleted: false };
+      if (search !== "") {
+        where = {
+          ...where,
+          OR: [
+            { phoneNumber: { contains: search, mode: "insensitive" } },
+            { person: { name: { contains: search, mode: "insensitive" } } },
+          ],
+        };
+      }
+      const [clients, total] = await Promise.all([
+        prisma.client.findMany({
+          where,
+          include: {
+            person: {
+              include: {
+                account: true,
+              },
+            },
+          },
+          orderBy: { [sortColumn]: sortOrder },
+          skip: (page - 1) * limit,
+          take: limit,
+        }),
+        prisma.client.count({ where }),
+      ]);
+      return {
+        data: clients,
+        total,
+        limit,
+        page,
+        totalPage: Math.ceil(total / limit),
+      };
+    } catch (error) {
+      console.log(error);
+    }
+  }
+
+  async updateClient(id, data) {
+    console.log("bắt đầu cập nhật");
+    const {
+      name,
+      profilePicture,
+      point,
+      email,
+      phoneNumber,
+      accountPassword,
+      verificationToken,
+      tokenExpiresAt,
+    } = data;
+
+    const client = await prisma.client.findUnique({
+      where: { id },
+      include: {
+        person: {
+          include: {
             account: true,
-         }, // Include person, account details
-        });
+          },
+        },
+      },
+    });
 
-        if (!client) {
-            throw new Error('Employee not found');
-        }
-
-        await prisma.person.update({
-            where: { id: client.personId },
-            data: {
-            name: name,
-            profilePicture: profilePicture,
-            }
-        });
-
-        const updatedClient = await prisma.client.update({
-            where: { id },
-            data: {
-                point: point,
-            }
-        });
-
-        const updatedAccount = await prisma.account.update({
-            where: { id: client.accountId },
-            data: {
-                accountUsername: accountUsername,
-                accountPassword: accountPassword,
-            }
-        });
-
-        return updatedClient;
-
+    if (!client) {
+      throw new Error("Client not found");
     }
 
-    async deleteClient(id) {
-        // Soft delete (set isDeleted to true) for both Employee and related Person
-        const client = await prisma.client.update({
-        where: { id },
-            data: { isDeleted: true },
-        });
+    // Cập nhật thông tin người dùng (person)
+    const person = await prisma.person.update({
+      where: { id: client.personId },
+      data: {
+        name: name,
+        profilePicture: profilePicture,
+      },
+    });
 
-        // Soft delete related Person using personId from the Employee
-        const person = await prisma.person.update({
-        where: { id: client.personId },
-            data: { isDeleted: true },
-        });
+    // Cập nhật thông tin khách hàng
+    const updatedClient = await prisma.client.update({
+      where: { id },
+      data: {
+        point: point,
+        email: email,
+        phoneNumber: phoneNumber,
+      },
+    });
 
-        const account = await prisma.account.update({
-        where: { id: client.accountId },
-            data: { isDeleted: true },
+    if (email) {
+      const accountId = client.person.account[0].id;
+      if (accountId) {
+        console.log("cập nhật account");
+        await prisma.account.update({
+          where: { id: accountId },
+          data: {
+            accountPassword: accountPassword,
+            verificationToken: verificationToken,
+            tokenExpiresAt: tokenExpiresAt,
+          },
         });
-
-        return { client, person };
+      }
     }
 
-    async testImageUpload() {
-    console.log("Running testImageUpload from AccountService");
-    const imagePath = 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSMcA2mtIS-z0Ne72z5P1VgzbnRkDcoeWhLfw&s';
-    const publicId = await cloudinary.uploadImage(imagePath);
-    console.log(publicId);
-     }
+    return updatedClient;
+  }
+
+  async deleteClient(id) {
+    // Soft delete (set isDeleted to true) for both Employee and related Person
+    const client = await prisma.client.update({
+      where: { id },
+      data: { isDeleted: true },
+    });
+
+    // Soft delete related Person using personId from the Employee
+    const person = await prisma.person.update({
+      where: { id: client.personId },
+      data: { isDeleted: true },
+    });
+
+    const account = await prisma.account.update({
+      where: { id: client.accountId },
+      data: { isDeleted: true },
+    });
+
+    return { client, person };
+  }
 }
 
-
 module.exports = new ClientService();
-

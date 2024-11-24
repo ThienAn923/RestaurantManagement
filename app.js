@@ -1,24 +1,25 @@
 const express = require("express");
 const cors = require("cors");
 const app = express();
-const dishRouter = require('./app/route/dish.route');
-const dishTypeRouter = require('./app/route/dishType.route');
-const accountRouter = require('./app/route/account.route');
-const clientRouter = require('./app/route/client.route');
-const departmentRouter = require('./app/route/department.route');
-const employeeRouter = require('./app/route/employee.route');
-const importInvoiceRouter = require('./app/route/importInvoice.route');
-const ingredientRouter = require('./app/route/ingredient.route');
-const invoiceRouter = require('./app/route/invoice.route');
-const orderRouter = require('./app/route/order.route');
-const ingredientTypeRouter = require('./app/route/ingredientType.route');
-const positionRouter = require('./app/route/position.route');
-const promotionRouter = require('./app/route/promotion.route');
-const tableRouter = require('./app/route/table.route');
-const login = require('./app/route/login.route');
-const providerRouter = require('./app/route/provider.route');
-const orderDetailRouter = require('./app/route/orderDetail.route')
-const expenseRouter = require('./app/route/expense.route');
+const dishRouter = require("./app/route/dish.route");
+const dishTypeRouter = require("./app/route/dishType.route");
+const accountRouter = require("./app/route/account.route");
+const clientRouter = require("./app/route/client.route.js");
+const departmentRouter = require("./app/route/department.route");
+const employeeRouter = require("./app/route/employee.route");
+const importInvoiceRouter = require("./app/route/importInvoice.route");
+const ingredientRouter = require("./app/route/ingredient.route");
+const invoiceRouter = require("./app/route/invoice.route");
+const orderRouter = require("./app/route/order.route");
+const ingredientTypeRouter = require("./app/route/ingredientType.route");
+const positionRouter = require("./app/route/position.route");
+const promotionRouter = require("./app/route/promotion.route");
+const tableRouter = require("./app/route/table.route");
+const login = require("./app/route/login.route");
+const providerRouter = require("./app/route/provider.route");
+const orderDetailRouter = require("./app/route/orderDetail.route");
+const expenseRouter = require("./app/route/expense.route");
+const clientTemporaryRouter = require("./app/route/clientTemporary.route");
 
 const ApiError = require("./app/api-error");
 
@@ -26,13 +27,16 @@ app.use(cors());
 app.use(express.json());
 
 app.get("/", (req, res) => {
-    res.json({ message: "Welcome to ThienAn Restaurant"});
+  res.json({ message: "Welcome to ThienAn Restaurant" });
 });
 app.get("/dish", (req, res) => {
-    res.json({ message: "test, (This message was originally just simply Test but at one point, 1AM, i was high and i spend like 30 minutes trying to figure out why the /dish dont work, i was so confused, i was like, i did everything right, why it dont work, then i realized that i forgot to put the /api in front of the /dish, i was so high, i was like bruh)"});
+  res.json({
+    message:
+      "test, (This message was originally just simply Test but at one point, 1AM, i was high and i spend like 30 minutes trying to figure out why the /dish dont work, i was so confused, i was like, i did everything right, why it dont work, then i realized that i forgot to put the /api in front of the /dish, i was so high, i was like bruh)",
+  });
 });
 
-app.use("/login", login)
+app.use("/login", login);
 
 app.use("/api/dish", dishRouter);
 
@@ -68,14 +72,12 @@ app.use("/api/orderDetail", orderDetailRouter);
 
 app.use("/api/expense", expenseRouter);
 
-
+app.use("/api/clientTemporary", clientTemporaryRouter);
 
 app.use((err, req, res, next) => {
-    return res.status(err.statusCode || 500).json({
-        message: err.message || "Internal Server Error",
-    });
+  return res.status(err.statusCode || 500).json({
+    message: err.message || "Internal Server Error",
+  });
 });
-
-
 
 module.exports = app;
