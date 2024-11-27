@@ -16,7 +16,21 @@ class DishController {
   }
 }
 
-
+async getDishesByDishTypeId(req, res)
+{
+  try {
+    const dish = await DishService.getDishesByDishTypeId(req.params.dishTypeId);
+    if(!dish)
+    {
+      return res.status(400).json({message: 'Dish not found'});
+    }
+    res.status(200).json(dish);
+  }
+  catch(error)
+  {
+    res.status(500).json({error: error.message});
+  }
+}
   async getDishById(req, res) {
     try {
       const dish = await DishService.getDishById(req.params.id);

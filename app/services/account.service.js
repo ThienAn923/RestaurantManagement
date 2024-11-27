@@ -220,6 +220,17 @@ class AccountService {
       },
     });
   }
+  async createAccountClient(data) {
+    const hashedPassword = await this.hashPassword(data.accountPassword);
+    return await prisma.account.create({
+      data: {
+        ...data,
+        accountPassword: hashedPassword,
+      },
+    });
+  }
+
 }
+  
 
 module.exports = new AccountService();

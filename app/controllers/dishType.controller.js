@@ -32,7 +32,17 @@ class DishTypeController {
       res.status(500).json({ error: error.message });
     }
   }
-
+  async getDishTypeByIdVerClient(req, res) {
+    try {
+      const dishType = await dishTypeService.getDishTypeByIdVerClient(req.params.id);
+      if (!dishType) {
+        return res.status(404).json({ message: 'Dish Type not found' });
+      }
+      res.status(200).json(dishType);
+    } catch (error) {
+      res.status(500).json({ error: error.message });
+    }
+  }
   // async getAllDishType(req, res) {
   //   try {
   //     const dishTypes = await dishTypeService.getAllDishTypes();

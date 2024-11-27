@@ -46,10 +46,27 @@ class DishService {
 
     return dish;
   }
-
   async getDishById(id) {
     return await prisma.dish.findUnique({
       where: { id },
+      include: {
+        //get the fisrt cost order by createAt
+        costs: { orderBy: { createAt: "desc" }, take: 1 },
+        images: true,
+        DishType: {
+          select: { id: true, DishTypeName: true },
+        },
+        // dishIngredients: {
+        //   include: { ingredient: true },
+        // },
+      },
+    });
+  }
+  async getDishesByDishTypeId(id) {
+    return await prisma.dish.findMany({
+      where: { 
+        dishType: id,
+       },
       include: {
         //get the fisrt cost order by createAt
         costs: { orderBy: { createAt: "desc" }, take: 1 },

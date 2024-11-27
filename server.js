@@ -29,7 +29,6 @@ async function startServer() {
       });
       MessageService.getAllMessages().then((messages) => {
         socket.emit("allMessages", messages);
-        console.log(messages);
       });
 
       socket.on("sendMessage", async (messageData) => {

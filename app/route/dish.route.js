@@ -13,5 +13,6 @@ router.route("/:id")
     .get(DishController.getDishById)
     .put(DishController.updateDish)
     .delete(DishController.deleteDish);
-
+    router.route("/type/:dishTypeId")
+    .get(DishController.getDishesByDishTypeId)   
 module.exports = router;

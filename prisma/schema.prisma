@@ -26,7 +26,7 @@ model Dish {
   promotion     PromotionAfterDish? @relation(fields: [promotionID], references: [id])
   invoiceDetail invoiceDetail[]
   images        Image[]
-  comment       comment[]
+  comment       Comment[]
   Rating        Rating[]
 }
 
@@ -134,16 +134,15 @@ model Client {
   updateAt    DateTime @updatedAt
   createAt    DateTime @default(now())
 
-  Booking      Booking[]
-  person       Person         @relation(fields: [personId], references: [id])
-  Feedback     Feedback[]
-  comment      comment[]
-  commentReply commentReply[]
-  Rating       Rating[]
+  Booking     Booking[]
+  person      Person        @relation(fields: [personId], references: [id])
+  Feedback    Feedback[]
+  comment     Comment[]
+  Rating      Rating[]
   // voucherUnit  voucherUnit[]
-  Room         Room[]
-  Message      Message[]
-  voucherUnit  voucherUnit[] //not ussed
+  Room        Room[]
+  Message     Message[]
+  voucherUnit voucherUnit[] //not ussed
 }
 
 model Person {
@@ -524,7 +523,7 @@ model FeedbackReply {
   Employee Employee @relation(fields: [emlpoyeeID], references: [id])
 }
 
-model comment {
+model Comment {
   id          String   @id @default(auto()) @map("_id") @db.ObjectId
   commentText String
   commentTime DateTime
@@ -533,24 +532,10 @@ model comment {
   clientID    String   @db.ObjectId
   updateAt    DateTime @updatedAt
   createAt    DateTime @default(now())
+  images      String[]
 
-  Client       Client         @relation(fields: [clientID], references: [id])
-  Dish         Dish           @relation(fields: [dishID], references: [id])
-  commentReply commentReply[]
-}
-
-model commentReply {
-  id        String   @id @default(auto()) @map("_id") @db.ObjectId
-  replyText String
-  replyTime DateTime
-  isDeleted Boolean  @default(false)
-  clientID  String   @db.ObjectId
-  commentID String   @db.ObjectId
-  updateAt  DateTime @updatedAt
-  createAt  DateTime @default(now())
-
-  comment comment @relation(fields: [commentID], references: [id])
-  Client  Client  @relation(fields: [clientID], references: [id])
+  Client Client @relation(fields: [clientID], references: [id])
+  Dish   Dish   @relation(fields: [dishID], references: [id])
 }
 
 model Rating {

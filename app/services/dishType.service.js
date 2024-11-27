@@ -12,7 +12,11 @@ class DishTypeService {
       include: { costs: true }, // Include costs if needed
     });
   }
-
+  async getDishTypeByIdVerClient(id) {
+    return await prisma.DishType.findUnique({
+      where: { id },
+    });
+  }
   async getAllDishTypesREAL() {
     return await prisma.DishType.findMany({
       where: { isDeleted: false },

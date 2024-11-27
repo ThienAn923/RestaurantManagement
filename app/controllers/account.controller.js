@@ -141,7 +141,19 @@ class AccountController {
       );
     }
   }
-
+  async createAccountClient(req, res, next) {
+    if(!req.body?.accountUsername || !req.body?.accountAuthority || !req.body?.accountPassword){
+        return next(new ApiError(400, "All fields must be filled including accountUsername, accountAuthority, and accountPassword"));
+    }
+    try{
+        console.log(req.body.password);
+        const account = await accountService.createAccount(req.body);
+        res.status(201).json({ ...account, accountPassword: undefined });
+    }catch(error){
+        console.log('Error detected:', error);
+        return next(new ApiError(500, "An error occurred while creating account"));
+    }
+}
   async login(req, res, next) {
     const { accountUsername, accountPassword } = req.body;
     if (!accountUsername || !accountPassword) {

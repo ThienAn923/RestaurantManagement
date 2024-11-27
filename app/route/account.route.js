@@ -6,7 +6,7 @@ const router = express.Router();
 //if you ever want to get createAccount to be public, just copy it below this line
 router.post("/login", AccountController.login);
 router.post("/loginClient", AccountController.loginClient);
-
+router.post("/client/",AccountController.createAccountClient)
 router.use(authMiddleware);
 router.get("/me", AccountController.getCurrentUser);
 

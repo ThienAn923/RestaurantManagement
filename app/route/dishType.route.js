@@ -12,5 +12,6 @@ router.route("/:id")
     .get(DishTypeController.getDishTypeById)
     .put(DishTypeController.updateDishType)
     .delete(DishTypeController.deleteDishType);
-
+router.route("/client/:id")
+    .get(DishTypeController.getDishTypeByIdVerClient)
 module.exports = router;
