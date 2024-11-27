@@ -52,7 +52,7 @@ class DishTypeService {
     if (allowedColumns.includes(sortColumn)) {
         orderBy[sortColumn] = sortOrder.toLowerCase() === 'desc' ? 'desc' : 'asc';
     } else {
-        orderBy.createAt = 'asc'; // Default sorting
+        orderBy.createAgit ct = 'asc'; // Default sorting
     }
 
     //if the string is not AllStatus, or true, this will have a value of false, if string is "true" this will have a value of true
