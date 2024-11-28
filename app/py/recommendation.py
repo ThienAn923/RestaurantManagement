@@ -25,10 +25,8 @@ def recommend_food(client_id, num_recommendations, api_url):
 
         # Xử lý các bản ghi trùng lặp: tính trung bình của các đánh giá cho mỗi (clientID, dishID)
         ratings = ratings.groupby(['clientID', 'dishID'], as_index=False)['ratingStar'].mean()
-
         # Pivot table để tạo ma trận người dùng - món ăn
         user_food_ratings = ratings.pivot(index='clientID', columns='dishID', values='ratingStar')
-
         # Xử lý dữ liệu NaN và chuẩn hóa
         imputer = SimpleImputer(strategy="constant", fill_value=0)
         user_food_ratings_filled = imputer.fit_transform(user_food_ratings)
@@ -45,11 +43,7 @@ def recommend_food(client_id, num_recommendations, api_url):
         similar_users_indices = user_similarity.argsort()[::-1][1:num_recommendations+1]
         similar_users_ratings = user_food_ratings.iloc[similar_users_indices]
         recommended_foods = similar_users_ratings.mean(axis=0).sort_values(ascending=False)
-
-        # Loại bỏ các món đã được đánh giá bởi người dùng
-        user_rated_foods = user_food_ratings.iloc[user_index].dropna().index
-        recommended_foods = recommended_foods.drop(user_rated_foods, errors='ignore')
-
+        print(recommended_foods)
         return recommended_foods.head(num_recommendations).index.tolist()
     except Exception as e:
         return {"error": str(e)}

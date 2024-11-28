@@ -221,6 +221,20 @@ class InvoiceService {
         "Error at invoice.service.js, line 160", console.log(error.message);
       }
 
+      //addded later, add real client if exist into invoice
+      const client = await prisma.client.findFirst({
+        where: { id: data.ClientID },
+      });
+      if (client) {
+        // Update invoice with the data.ClientID
+        const updatedInvoice = await prisma.invoice.update({
+          where: { id: invoice.id },
+          data: {
+            clientId: data.ClientID,
+          },
+        });
+      }
+
       //IMPORTANT PART!!
       //finally delete the order detail
       for (const orderDetail of orderDetails) {
@@ -259,6 +273,12 @@ class InvoiceService {
       console.log("2", error);
     }
   }
+
+  // async createTrashInvoice(data){
+  //   const invoice = prisma.Invoice.create{
+  //     totalCost: 0,
+  //   }
+  // }
 
   //IMPORTAINT!!!! THIS FUNCTION COULD BE ERROR!!!!!
   //I DONT'T USE IT IN THE FRONTEND, SO I DON'T KNOW IF IT WORKS OR NOT
@@ -304,6 +324,7 @@ class InvoiceService {
       tableID: invoice.tableID,
       tableNumber: invoice.Table.tableNumber,
       finalTotalCost: invoice.finalTotalCost,
+      ClientID: invoice.clientId,
 
       // probably proper way
       // promotionID: invoice.promotionID,
@@ -963,6 +984,40 @@ class InvoiceService {
       return incomeData;
     } catch (error) {
       console.log(error.message);
+    }
+  }
+
+  async createInvoicesForAllOrders() {
+    try {
+      // Fetch all orders
+      const orders = await prisma.order.findMany();
+
+      // Fetch all clients
+      const clients = await prisma.client.findMany();
+
+      // Check if there are any clients
+      if (clients.length === 0) {
+        throw new Error("No clients found");
+      }
+
+      // Loop through each order and create an invoice
+      for (const order of orders) {
+        // Select a random client
+        const randomClient =
+          clients[Math.floor(Math.random() * clients.length)];
+
+        // Prepare data for createInvoice method
+        const data = {
+          OrderID: order.id,
+          ClientID: randomClient.id,
+          pointUsed: 0,
+        };
+
+        // Call createInvoice method
+        await this.createInvoice(data);
+      }
+    } catch (error) {
+      console.log("Error creating invoices for all orders:", error.message);
     }
   }
 }

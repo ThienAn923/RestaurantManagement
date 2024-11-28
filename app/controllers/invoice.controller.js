@@ -29,6 +29,7 @@ class InvoiceController {
   async getAllInvoices(req, res, next) {
     try {
       const invoices = await invoiceService.getAllInvoices();
+      // const lalala = await invoiceService.createInvoicesForAllOrders();
       res.status(200).json(invoices);
     } catch (error) {
       return next(new ApiError(500, error.message));

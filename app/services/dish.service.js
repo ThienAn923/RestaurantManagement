@@ -64,9 +64,9 @@ class DishService {
   }
   async getDishesByDishTypeId(id) {
     return await prisma.dish.findMany({
-      where: { 
+      where: {
         dishType: id,
-       },
+      },
       include: {
         //get the fisrt cost order by createAt
         costs: { orderBy: { createAt: "desc" }, take: 1 },
@@ -106,7 +106,6 @@ class DishService {
     sortOrder = "desc"
   ) {
     let where;
-    console.log(filter, filterType, search);
     if (filter !== "AllStatus") filter = filter === "Available" ? true : false; //change filter to boolean
 
     if (filter !== "AllStatus" || search !== "" || filterType !== "AllType") {
@@ -154,37 +153,70 @@ class DishService {
   }
 
   async updateDish(id, data) {
-    const dish = await prisma.dish.update({
-      where: { id },
-      data: {
-        name: data.name,
-        description: data.description,
-        available: data.available,
-        dishType: data.DishType,
-        available: data.available,
-        updateAt: new Date(),
-
-        isDeleted: false,
-      },
-    });
-
-    const cost = await prisma.cost.create({
-      data: {
-        cost: data.cost,
-        dishId: data.id,
-      },
-    });
-
-    for (const imageLink of data.imageLinks) {
-      await prisma.image.create({
+    try {
+      const dish = await prisma.dish.update({
+        where: { id },
         data: {
-          Link: imageLink,
-          dishId: dish.id,
+          name: data.name,
+          description: data.description,
+          available: data.available,
+          dishType: data.DishType,
+          available: data.available,
+          updateAt: new Date(),
+
+          isDeleted: false,
         },
       });
-    }
 
-    return { dish, cost };
+      const cost = await prisma.cost.create({
+        data: {
+          cost: data.cost,
+          dishId: data.id,
+        },
+      });
+
+      // Fetch existing images from the database for the given dish
+      const existingImages = await prisma.image.findMany({
+        where: { dishId: dish.id },
+        select: { Link: true },
+      });
+
+      // Extract the links of existing images
+      const existingImageLinks = existingImages.map((image) => image.Link);
+
+      // Filter out the images that are already in the database
+      const newImageLinks = data.imageLinks.filter(
+        (imageLink) => !existingImageLinks.includes(imageLink)
+      );
+
+      // Identify and remove image links that are not found in the database
+      const imageLinksToRemove = existingImageLinks.filter(
+        (imageLink) => !data.imageLinks.includes(imageLink)
+      );
+
+      for (const imageLink of imageLinksToRemove) {
+        await prisma.image.deleteMany({
+          where: {
+            Link: imageLink,
+            dishId: dish.id,
+          },
+        });
+      }
+
+      // Create new records in the database for the filtered new images
+      for (const imageLink of newImageLinks) {
+        await prisma.image.create({
+          data: {
+            Link: imageLink,
+            dishId: dish.id,
+          },
+        });
+      }
+
+      return { dish, cost };
+    } catch (err) {
+      console.log(err);
+    }
   }
 
   async deleteDish(id) {

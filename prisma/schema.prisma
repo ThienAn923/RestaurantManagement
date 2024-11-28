@@ -127,8 +127,8 @@ model Client {
   id          String   @id @default(auto()) @map("_id") @db.ObjectId
   point       Int
   personId    String   @db.ObjectId
-  email       String?  @unique
-  phoneNumber String?  @unique
+  email       String?
+  phoneNumber String?
   gender      Boolean? @default(true)
   isDeleted   Boolean  @default(false)
   updateAt    DateTime @updatedAt
@@ -143,6 +143,7 @@ model Client {
   Room        Room[]
   Message     Message[]
   voucherUnit voucherUnit[] //not ussed
+  Invoice     Invoice[]
 }
 
 model Person {
@@ -345,6 +346,10 @@ model Invoice {
   invoiceDetail_list    invoiceDetail[]
   Payment               Payment[]
   PromotionToInvoice    PromotionToInvoice[]
+
+  //newly added
+  clientId String? @db.ObjectId
+  client   Client? @relation(fields: [clientId], references: [id])
 }
 
 model invoiceDetail {

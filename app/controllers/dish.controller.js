@@ -1,41 +1,38 @@
 // dish.controller.js
-const DishService = require('../services/dish.service');
+const DishService = require("../services/dish.service");
 const ApiError = require("../api-error");
 const MongoDB = require("../utils/mongodb.util");
 
 class DishController {
   async createDish(req, res, next) {
+    try {
+      const dish = await DishService.createDish(req.body);
+      res.status(201).json(dish);
+    } catch (error) {
+      console.log("Error detected:", error);
 
-  try {
-    const dish = await DishService.createDish(req.body);
-    res.status(201).json(dish);
-  } catch (error) {
-    console.log('Error detected:', error);
-
-    return next(new ApiError(500, error.message));
-  }
-}
-
-async getDishesByDishTypeId(req, res)
-{
-  try {
-    const dish = await DishService.getDishesByDishTypeId(req.params.dishTypeId);
-    if(!dish)
-    {
-      return res.status(400).json({message: 'Dish not found'});
+      return next(new ApiError(500, error.message));
     }
-    res.status(200).json(dish);
   }
-  catch(error)
-  {
-    res.status(500).json({error: error.message});
+
+  async getDishesByDishTypeId(req, res) {
+    try {
+      const dish = await DishService.getDishesByDishTypeId(
+        req.params.dishTypeId
+      );
+      if (!dish) {
+        return res.status(400).json({ message: "Dish not found" });
+      }
+      res.status(200).json(dish);
+    } catch (error) {
+      res.status(500).json({ error: error.message });
+    }
   }
-}
   async getDishById(req, res) {
     try {
       const dish = await DishService.getDishById(req.params.id);
       if (!dish) {
-        return res.status(404).json({ message: 'Dish not found' });
+        return res.status(404).json({ message: "Dish not found" });
       }
       res.status(200).json(dish);
     } catch (error) {
@@ -45,8 +42,13 @@ async getDishesByDishTypeId(req, res)
 
   async getAllDishes(req, res) {
     try {
-      const dishes = await DishService.getAllDishes(req.query.page, req.query.search ,req.query.filter, req.query.filterType);
-      
+      const dishes = await DishService.getAllDishes(
+        req.query.page,
+        req.query.search,
+        req.query.filter,
+        req.query.filterType
+      );
+
       res.status(200).json(dishes);
     } catch (error) {
       res.status(500).json({ error: error.message });
