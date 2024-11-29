@@ -145,15 +145,23 @@ class DepartmentService {
     };
   }
   async updateDepartment(id, data) {
-    return await prisma.Department.update({
-      where: { id },
-      data,
-    });
+    try {
+      return await prisma.department.update({
+        where: { id },
+        data: {
+          departmentName: data.departmentName,
+          departmentDescription: data.departmentDescription,
+          headOfDepartment: data.headOfDepartment.id,
+        },
+      });
+    } catch (error) {
+      error.message;
+    }
   }
 
   async deleteDepartment(id) {
     // Soft delete (set isDeleted to true)
-    return await prisma.Department.update({
+    return await prisma.department.update({
       where: { id },
       data: { isDeleted: true },
     });

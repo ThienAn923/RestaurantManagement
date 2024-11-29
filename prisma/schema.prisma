@@ -203,6 +203,10 @@ model account {
   verificationToken String?
   tokenExpiresAt    DateTime?
   Person            Person    @relation(fields: [personId], references: [id])
+
+  //newlly added, it's not supposed to be "?" but i gotta change all the client account if it's not "?", so, fuck it, not happening 
+  accountIsLocked   Boolean? @default(false)
+  accountLockReason String?
 }
 
 //new

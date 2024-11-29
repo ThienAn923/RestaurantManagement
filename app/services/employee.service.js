@@ -1,215 +1,253 @@
-const prisma = require('../../prisma/client');
+const prisma = require("../../prisma/client");
 const DepartmentService = require("../services/department.service");
 const PositionService = require("../services/position.service");
 
 class EmployeeService {
-    async createEmployee(data) {
-        //profilePicture should be default by the "default avatar link"
-        const { name, profilePicture, employeeAdress, employeeGender, employeeDateOfBirth, positionId, departmentId, AccountAuthority, StartDay } = data;
+  async createEmployee(data) {
+    console.log(data.createAccount);
+    //profilePicture should be default by the "default avatar link"
+    const {
+      name,
+      profilePicture,
+      employeeAdress,
+      employeeGender,
+      employeeDateOfBirth,
+      positionId,
+      departmentId,
+      AccountAuthority,
+      StartDay,
+      createAccount,
+    } = data;
 
-        //create a person
-        const person = await prisma.person.create({
-            data: {
-                name: name,
-                profilePicture: profilePicture,
-            }
-        });
+    //create a person
+    const person = await prisma.person.create({
+      data: {
+        name: name,
+        profilePicture: profilePicture,
+      },
+    });
 
-        //create employee
-        const employee = await prisma.employee.create({
-            data: {
-                employeeAdress: employeeAdress,
-                employeeGender: employeeGender,
-                employeeDateOfBirth: employeeDateOfBirth,
-                employeePhoneNumber: '0123456789', //temporary phone number
-                employeeEmail: 'anb2110113@student.ctu.edu.vn', //temporary email
-                personId: person.id,
-            }
-        });
-        
-        const work = await prisma.work.create({
-            data: {
-                startDay: StartDay, // Sử dụng StartDay từ dữ liệu đầu vào
-                Employee: {
-                    connect: { id: employee.id } // Kết nối đến employee đã tạo
-                },
-                Department: {
-                    connect: { id: departmentId } // Kết nối đến department đã lấy
-                },
-                Position: {
-                    connect: { id: positionId } // Kết nối đến position đã lấy
-                }
-            }
-        });
+    //create employee
+    const employee = await prisma.employee.create({
+      data: {
+        employeeAdress: employeeAdress,
+        employeeGender: employeeGender,
+        employeeDateOfBirth: employeeDateOfBirth,
+        employeePhoneNumber: "0123456789", //temporary phone number
+        employeeEmail: "anb2110113@student.ctu.edu.vn", //temporary email
+        personId: person.id,
+      },
+    });
 
-
-        const account = await prisma.account.create({
-            data: {
-                //temporary username and password, will figured out how to generate it later
-                accountUsername: name,
-                accountPassword: '123456',
-                AccountAuthority: AccountAuthority, //1 for employee //0 for admins //2 for clients
-                personId: person.id,
-            }
-        });
-
-        return employee;
-    }
-
-    async getEmployeeById(id) {
-        return await prisma.employee.findUnique({
-            where: { id },
-            include:{
-                Person: {
-                    include: {
-                    account: true,
-                    },
-                },
-                Work: {
-                    include: {
-                        Position: true,
-                        Department: true
-                    }
-                },
-            },
-        });
-    }
-
-    async getAllEmployeesREAL() {
-        return await prisma.employee.findMany({
-        where: { isDeleted: false },
-        include:{
-            person: {
-                include: {
-                account: true,
-                },
-            },
-            Work: {
-                include: {
-                    Position: true,
-                    Department: true,
-                }
-            },
+    const work = await prisma.work.create({
+      data: {
+        startDay: StartDay, // Sử dụng StartDay từ dữ liệu đầu vào
+        Employee: {
+          connect: { id: employee.id }, // Kết nối đến employee đã tạo
         },
-        });
+        Department: {
+          connect: { id: departmentId }, // Kết nối đến department đã lấy
+        },
+        Position: {
+          connect: { id: positionId }, // Kết nối đến position đã lấy
+        },
+      },
+    });
+
+    if (createAccount == false) return employee;
+    if (createAccount == true) {
+      const account = await prisma.account.create({
+        data: {
+          //temporary username and password, will figured out how to generate it later
+          accountUsername: name,
+          accountPassword: "123456",
+          AccountAuthority: parseInt(AccountAuthority), //lmao
+          personId: person.id,
+        },
+      });
     }
 
-    
-    async getAllEmployees(page = 1, limit = 5) {
-        const skip = (page - 1) * limit
-        const [employees, total] = await Promise.all([
-        prisma.employee.findMany({
-            where: { isDeleted: false },
-                include: {
-                    person: {
-                        include: {
-                        account: true,
-                        },
-                    },
-                    Work: {
-                        include: {
-                        Position: true,
-                        Department: true,
-                        },
-                    },
-                },
-            skip,
-            take: limit,
-            }),
-            prisma.employee.count({ where: { isDeleted: false } }),
-        ])
+    return employee;
+  }
 
-        return {
-        employees,
-        total,
-        page: parseInt(page),
-        limit: parseInt(limit),
-        totalPages: Math.ceil(total / limit),
-        
-        }
-    }
+  async getEmployeeById(id) {
+    return await prisma.employee.findUnique({
+      where: { id },
+      include: {
+        Person: {
+          include: {
+            account: true,
+          },
+        },
+        Work: {
+          include: {
+            Position: true,
+            Department: true,
+          },
+        },
+      },
+    });
+  }
 
-    async updateEmployee(id, data) {
-        const { name, profilePicture, employeeAdress, employeeGender, employeeDateOfBirth, departmentId, positionId} = data;
-        const employee = await prisma.employee.findUnique({
-            where: { id },
+  async getAllEmployeesREAL() {
+    return await prisma.employee.findMany({
+      where: { isDeleted: false },
+      include: {
+        person: {
+          include: {
+            account: true,
+          },
+        },
+        Work: {
+          include: {
+            Position: true,
+            Department: true,
+          },
+        },
+      },
+    });
+  }
+
+  async getAllEmployees(page = 1, limit = 5) {
+    const skip = (page - 1) * limit;
+    const [employees, total] = await Promise.all([
+      prisma.employee.findMany({
+        where: { isDeleted: false },
+        include: {
+          person: {
             include: {
-                Person: {
-                    include: {
-                    account: true,
-                    },
-                },
-                work: {
-                    include: {
-                        position: true,
-                        department: true
-                },
-                work: true,
-                }, // Include person details
+              account: true,
             },
-        });
+          },
+          Work: {
+            include: {
+              Position: true,
+              Department: true,
+            },
+          },
+        },
+        skip,
+        take: limit,
+      }),
+      prisma.employee.count({ where: { isDeleted: false } }),
+    ]);
 
-        if (!employee) {
-            throw new Error('Employee not found');
-        }
+    return {
+      employees,
+      total,
+      page: parseInt(page),
+      limit: parseInt(limit),
+      totalPages: Math.ceil(total / limit),
+    };
+  }
 
-        await prisma.person.update({
-            where: { id: employee.personId },
-            data: {
-            name: name,
-            profilePicture: profilePicture,
-            }
-        });
+  async updateEmployee(id, data) {
+    const {
+      name,
+      profilePicture,
+      employeeAdress,
+      employeeGender,
+      employeeDateOfBirth,
+      departmentId,
+      positionId,
+    } = data;
+    const employee = await prisma.employee.findUnique({
+      where: { id },
+      include: {
+        Person: {
+          include: {
+            account: true,
+          },
+        },
+        work: {
+          include: {
+            position: true,
+            department: true,
+          },
+          work: true,
+        }, // Include person details
+      },
+    });
 
-        await prisma.work.update({
-            where: { id: employee.workId },
-            data: {
-                positionId: positionId,
-                departmentId: departmentId,
-            }
-        }); 
-
-        const updatedEmployee = await prisma.employee.update({
-            where: { id },
-            data: {
-                employeeAdress: employeeAdress,
-                employeeDateOfBirth: employeeDateOfBirth,
-                employeeGender: employeeGender,
-            }
-        });
-
-
-        return updatedEmployee;
-
+    if (!employee) {
+      throw new Error("Employee not found");
     }
 
-    async deleteEmployee(id) {
-        // Soft delete (set isDeleted to true) for both Employee and related Person
-        const employee = await prisma.employee.update({
+    await prisma.person.update({
+      where: { id: employee.personId },
+      data: {
+        name: name,
+        profilePicture: profilePicture,
+      },
+    });
+
+    await prisma.work.update({
+      where: { id: employee.workId },
+      data: {
+        positionId: positionId,
+        departmentId: departmentId,
+      },
+    });
+
+    const updatedEmployee = await prisma.employee.update({
+      where: { id },
+      data: {
+        employeeAdress: employeeAdress,
+        employeeDateOfBirth: employeeDateOfBirth,
+        employeeGender: employeeGender,
+      },
+    });
+
+    return updatedEmployee;
+  }
+
+  async deleteEmployee(id) {
+    try {
+      // Soft delete (set isDeleted to true) for both Employee and related Person
+      const employeeInfo = await prisma.employee.findUnique({
         where: { id },
-            data: { isDeleted: true },
-        });
+        include: {
+          person: {
+            include: {
+              account: true,
+            },
+          },
+          Work: {
+            include: { Department: true, Position: true },
+          },
+        },
+      });
+      //   console.log(JSON.stringify(employeeInfo));
 
-        // Soft delete related Person using personId from the Employee
-        const person = await prisma.person.update({
+      const employee = await prisma.employee.update({
+        where: { id },
+        data: { isDeleted: true },
+      });
+
+      //   Soft delete related Person using personId from the Employee
+      const person = await prisma.person.update({
         where: { id: employee.personId },
-            data: { isDeleted: true },
-        });
+        data: { isDeleted: true },
+      });
 
-        const work = await prisma.work.update({
-        where: { id: employee.workId },
-            data: { isDeleted: true },
-        });
+      const work = await prisma.work.update({
+        where: { id: employeeInfo.Work.id },
+        data: { isDeleted: true },
+      });
 
+      if (employeeInfo.person.account.length > 0) {
+        //because it's somehow an array, maybe im not gud at prisma
         const account = await prisma.account.update({
-        where: { id: person.accountId },
-            data: { isDeleted: true },
+          where: { id: employeeInfo.person.account[0].id },
+          data: { isDeleted: true },
         });
+      }
 
-        return { employee, person };
+      return { employee, person };
+    } catch (err) {
+      console.log(err.message);
     }
+  }
 }
 
-
 module.exports = new EmployeeService();
-

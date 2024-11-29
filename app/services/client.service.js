@@ -78,19 +78,63 @@ class ClientService {
     });
   }
 
-  async getAllClients() {
-    return await prisma.client.findMany({
-      where: {
-        isDeleted: false,
-      },
-      include: {
-        person: {
-          include: {
-            account: true,
+  async getAllClients(
+    page = 1,
+    limit = 5,
+    sortColumn = "createAt",
+    sortOrder = "desc",
+    search = ""
+  ) {
+    try {
+      let where = { isDeleted: false };
+      if (search !== "") {
+        where = {
+          ...where,
+          OR: [
+            { phoneNumber: { contains: search, mode: "insensitive" } },
+            { person: { name: { contains: search, mode: "insensitive" } } },
+          ],
+        };
+      }
+      let orderBy = {};
+      if (sortColumn === "clientName") {
+        orderBy = {
+          person: {
+            name: sortOrder,
           },
-        },
-      },
-    });
+        };
+      } else {
+        orderBy = {
+          [sortColumn]: sortOrder,
+        };
+      }
+
+      const [clients, total] = await Promise.all([
+        prisma.client.findMany({
+          where,
+          include: {
+            person: {
+              include: {
+                account: true,
+              },
+            },
+          },
+          orderBy,
+          skip: (page - 1) * limit,
+          take: limit,
+        }),
+        prisma.client.count({ where }),
+      ]);
+      return {
+        data: clients,
+        total,
+        limit,
+        page,
+        totalPage: Math.ceil(total / limit),
+      };
+    } catch (error) {
+      console.log(error);
+    }
   }
 
   async updateClient(id, data) {
@@ -177,6 +221,53 @@ class ClientService {
     });
 
     return { client, person };
+  }
+
+  async banClient(id, reason) {
+    console.log(id, reason);
+    const client = await prisma.client.findUnique({
+      where: { id },
+      include: {
+        person: {
+          include: {
+            account: true,
+          },
+        },
+      },
+    });
+
+    if (!client) {
+      throw new Error("Client not found");
+    } else {
+      const account = await prisma.account.update({
+        where: { id: client.person.account[0].id },
+        data: { accountIsLocked: true, accountLockReason: reason },
+      });
+      return account;
+    }
+  }
+
+  async unbanClient(id) {
+    const client = await prisma.client.findUnique({
+      where: { id },
+      include: {
+        person: {
+          include: {
+            account: true,
+          },
+        },
+      },
+    });
+
+    if (!client) {
+      throw new Error("Client not found");
+    } else {
+      const account = await prisma.account.update({
+        where: { id: client.person.account[0].id },
+        data: { accountIsLocked: false, accountLockReason: null },
+      });
+      return account;
+    }
   }
 }
 

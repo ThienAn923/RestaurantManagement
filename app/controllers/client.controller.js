@@ -105,7 +105,15 @@ class ClientController {
   }
   async getAllClients(req, res, next) {
     try {
-      const clients = await clientService.getAllClients();
+      let page = parseInt(req.query.page) || 1;
+      let limit = parseInt(req.query.limit) || 5;
+      const clients = await clientService.getAllClients(
+        page,
+        limit,
+        req.query.sortColumn,
+        req.query.sortOrder,
+        req.query.search
+      );
       res.status(200).json(clients);
     } catch (error) {
       return next(new ApiError(500, error.message));
@@ -143,6 +151,27 @@ class ClientController {
       res.status(204).json();
     } catch (error) {
       return next(new ApiError(500, "An error occurred while deleting client"));
+    }
+  }
+
+  async banClient(req, res, next) {
+    try {
+      const bannedClient = await clientService.banClient(
+        req.params.id,
+        req.body.reason
+      );
+      res.status(200).json(bannedClient);
+    } catch (error) {
+      return next(new ApiError(500, error.message));
+    }
+  }
+
+  async unbanClient(req, res, next) {
+    try {
+      const unbannedClient = await clientService.unbanClient(req.params.id);
+      res.status(200).json(unbannedClient);
+    } catch (error) {
+      return next(new ApiError(500, error.message));
     }
   }
 }
