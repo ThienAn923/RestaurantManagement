@@ -3,6 +3,7 @@ const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 
 class AccountService {
+  //somehow unused, so no need to correct it lol
   async createDish(data) {
     return await prisma.account.create({ data });
   }
@@ -229,8 +230,6 @@ class AccountService {
       },
     });
   }
-
 }
-  
 
 module.exports = new AccountService();

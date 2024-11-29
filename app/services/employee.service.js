@@ -1,6 +1,9 @@
 const prisma = require("../../prisma/client");
 const DepartmentService = require("../services/department.service");
 const PositionService = require("../services/position.service");
+const crypto = require("crypto");
+const bcrypt = require("bcrypt");
+const { removeVietnameseTones } = require("vietnamese-unicode-toolkit");
 
 class EmployeeService {
   async createEmployee(data) {
@@ -55,19 +58,43 @@ class EmployeeService {
     });
 
     if (createAccount == false) return employee;
+    let AccountUsername = await this.generateUsername(); //to english, remove space
+    let AccountPassword = await this.generateRandomPassword();
+    console.log("BBBBBBBBBBBBBB", AccountUsername, AccountPassword);
+    let account;
     if (createAccount == true) {
-      const account = await prisma.account.create({
+      account = await prisma.account.create({
         data: {
           //temporary username and password, will figured out how to generate it later
-          accountUsername: name,
-          accountPassword: "123456",
+          accountUsername: AccountUsername, //to english, remove space
+          accountPassword: await this.hashPassword(AccountPassword), //default password
           AccountAuthority: parseInt(AccountAuthority), //lmao
           personId: person.id,
         },
       });
     }
 
-    return employee;
+    return { employee, account, AccountUsername, AccountPassword };
+  }
+  async generateUsername() {
+    const employeeCount = await prisma.employee.count();
+    const numberPart = (employeeCount + 1).toString().padStart(6, "0");
+    console.log("AHHHHHHHHHHHHHHHHHH" + `nv${numberPart}`);
+    return `nv${numberPart}`;
+  }
+
+  async generateRandomPassword() {
+    const characters =
+      "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+    let password = "";
+    for (let i = 0; i < 8; i++) {
+      const randomIndex = Math.floor(Math.random() * characters.length);
+      password += characters[randomIndex];
+    }
+    return password;
+  }
+  async hashPassword(password) {
+    return await bcrypt.hash(password, 10);
   }
 
   async getEmployeeById(id) {

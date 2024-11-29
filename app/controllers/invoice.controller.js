@@ -84,6 +84,15 @@ class InvoiceController {
       return next(new ApiError(500, error.message));
     }
   }
+
+  async getAllInvoicesHaveClientID(req, res, next) {
+    try {
+      const invoices = await invoiceService.getAllInvoicesHaveClientID();
+      res.status(200).json(invoices);
+    } catch (error) {
+      return next(new ApiError(500, error.message));
+    }
+  }
 }
 
 module.exports = new InvoiceController();

@@ -122,23 +122,28 @@ class ClientController {
 
   async updateClient(req, res, next) {
     try {
+      console.log(req.body);
       const otp = Math.floor(100000 + Math.random() * 90000).toString();
       const otpExpiresAt = new Date(Date.now() + 5 * 60 * 1000);
       req.session.otp = otp;
+      console.log("Irun1");
       console.log(`otp luu vao ${req.session.otp}`);
       req.session.otpExpiresAt = otpExpiresAt;
       req.session.email = req.body.email;
       req.body.tokenExpiresAt = otpExpiresAt;
+      console.log("irun2", req.body.email);
       req.body.verificationToken = otp;
       await emailQueue.add({
         to: req.body.email,
         subject: "Xác minh email",
         html: `<p>Mã  xác minh của bạn là: <strong>${otp}</strong></p>`,
       });
+      console.log("irun3");
       const updatedClient = await clientService.updateClient(
         req.params.id,
         req.body
       );
+      console.log("irun4");
       res.status(200).json(updatedClient);
     } catch (error) {
       return next(new ApiError(500, error.message));

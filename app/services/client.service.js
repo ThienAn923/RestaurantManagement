@@ -96,6 +96,7 @@ class ClientService {
           ],
         };
       }
+
       let orderBy = {};
       if (sortColumn === "clientName") {
         orderBy = {
@@ -103,7 +104,7 @@ class ClientService {
             name: sortOrder,
           },
         };
-      } else {
+      } else if (sortColumn !== "isLocked") {
         orderBy = {
           [sortColumn]: sortOrder,
         };
@@ -125,6 +126,20 @@ class ClientService {
         }),
         prisma.client.count({ where }),
       ]);
+
+      // Sort by accountIsLocked if needed
+      if (sortColumn === "isLocked") {
+        clients.sort((a, b) => {
+          const aLocked = a.person.account[0]?.accountIsLocked ? 1 : 0;
+          const bLocked = b.person.account[0]?.accountIsLocked ? 1 : 0;
+          if (sortOrder === "asc") {
+            return aLocked - bLocked;
+          } else {
+            return bLocked - aLocked;
+          }
+        });
+      }
+
       return {
         data: clients,
         total,

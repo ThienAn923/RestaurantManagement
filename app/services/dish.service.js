@@ -221,10 +221,15 @@ class DishService {
 
   async deleteDish(id) {
     // Soft delete (set isDeleted to true)
-    return await prisma.dish.update({
-      where: { id },
-      data: { isDeleted: true },
-    });
+    try {
+      // console.log("AHHHHHHHHHHHHHHHHHH");
+      return await prisma.dish.update({
+        where: { id },
+        data: { isDeleted: true },
+      });
+    } catch (err) {
+      console.log(err);
+    }
   }
 
   async getIngredientsByDishId(dishId) {

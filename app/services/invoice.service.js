@@ -1020,6 +1020,35 @@ class InvoiceService {
       console.log("Error creating invoices for all orders:", error.message);
     }
   }
+
+  async getAllInvoicesHaveClientID() {
+    const invoices = await prisma.invoice.findMany({
+      where: {
+        clientId: {
+          not: null,
+        },
+      },
+      orderBy: {
+        invoiceDate: "desc",
+      },
+      include: {
+        PromotionAfterInvoice: true,
+        Table: true,
+        invoiceDetail_list: {
+          include: {
+            Dish: true,
+            Promotion: {
+              include: {
+                Promotion: true,
+              },
+            },
+          },
+        },
+      },
+    });
+
+    return invoices;
+  }
 }
 
 module.exports = new InvoiceService();

@@ -42,6 +42,7 @@
     "node-cron": "^3.0.3",
     "nodemailer": "^6.9.16",
     "pinia": "^2.2.2",
-    "socket.io": "^4.8.0"
+    "socket.io": "^4.8.0",
+    "vietnamese-unicode-toolkit": "^0.0.4"
   }
 }
