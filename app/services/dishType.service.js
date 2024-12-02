@@ -1,5 +1,5 @@
 // dish.service.js
-const prisma = require('../../prisma/client'); // Go up two directories from 'service' to 'project' then into 'prisma'
+const prisma = require("../../prisma/client"); // Go up two directories from 'service' to 'project' then into 'prisma'
 
 class DishTypeService {
   async createDishType(data) {
@@ -46,94 +46,121 @@ class DishTypeService {
   // }
 
   // //testing pinia with sort
-  async getAllDishTypes(page = 1, limit = 5, sortColumn = 'DishTypeName', sortOrder = 'asc', search = '', filter = 'AllStatus', ) {
+  async getAllDishTypes(
+    page = 1,
+    limit = 5,
+    sortColumn = "DishTypeName",
+    sortOrder = "asc",
+    search = "",
+    filter = "AllStatus"
+  ) {
     // console.log(sortColumn);
     const skip = (page - 1) * limit;
     const orderBy = {};
-    
+
     // Validate sortColumn to prevent potential SQL injection
-    const allowedColumns = ['DishTypeName', 'DishTypeDescription', 'DishTypeAvailable', 'createAt', 'updateAt'];
+    const allowedColumns = [
+      "DishTypeName",
+      "DishTypeDescription",
+      "DishTypeAvailable",
+      "createAt",
+      "updateAt",
+    ];
     if (allowedColumns.includes(sortColumn)) {
-        orderBy[sortColumn] = sortOrder.toLowerCase() === 'desc' ? 'desc' : 'asc';
+      orderBy[sortColumn] = sortOrder.toLowerCase() === "desc" ? "desc" : "asc";
     } else {
-        orderBy.createAt = 'asc'; // Default sorting
+      orderBy.createAt = "asc"; // Default sorting
     }
 
     //if the string is not AllStatus, or true, this will have a value of false, if string is "true" this will have a value of true
     //if the string is AllStatus, this will have a value of AllStatus
     //temporarily, because time limit
-    if (filter == 'false') {
-        filter = false;
-    }
-    else if (filter === 'true') {
-        filter = true;
+    if (filter == "false") {
+      filter = false;
+    } else if (filter === "true") {
+      filter = true;
     }
     //end of temporary
 
-
     let where;
-    if (filter !== 'AllStatus' || search !== '') {
-        where = {
-            isDeleted: false, 
-            AND: [
-                ...(filter !== 'AllStatus' ? [{ DishTypeAvailable: filter }] : []),
-                ...(search !== '' ? [
-                    {
-                        OR: [
-                            { DishTypeName: { contains: search } },
-                            
-                        ]
-                    }
-                ] : [])
-            ]
-        };
-    }else where = { isDeleted: false };
+    if (filter !== "AllStatus" || search !== "") {
+      where = {
+        isDeleted: false,
+        AND: [
+          ...(filter !== "AllStatus" ? [{ DishTypeAvailable: filter }] : []),
+          ...(search !== ""
+            ? [
+                {
+                  OR: [{ DishTypeName: { contains: search } }],
+                },
+              ]
+            : []),
+        ],
+      };
+    } else where = { isDeleted: false };
 
-      // console.log(filter)
+    // console.log(filter)
 
     const [data, total] = await Promise.all([
-        prisma.DishType.findMany({
+      prisma.DishType.findMany({
         where,
         skip,
         take: limit,
         orderBy,
         select: {
-              id: true,
-              DishTypeName: true,
-              DishTypeDescription: true,
-              DishTypeAvailable: true,
-              createAt: true,
-              updateAt: true,
-          },
-        }),
-        //count total data of the input condition   
-        prisma.DishType.count({ where }),
+          id: true,
+          DishTypeName: true,
+          DishTypeDescription: true,
+          DishTypeAvailable: true,
+          createAt: true,
+          updateAt: true,
+        },
+      }),
+      //count total data of the input condition
+      prisma.DishType.count({ where }),
     ]);
 
     return {
-        data,
-        total,
-        page,
-        limit,
-        totalPages: Math.ceil(total / limit),
+      data,
+      total,
+      page,
+      limit,
+      totalPages: Math.ceil(total / limit),
     };
   }
 
   async updateDishType(id, data) {
-    return await prisma.DishType.update({
+    const updatedDishType = await prisma.DishType.update({
       where: { id },
       data,
     });
+
+    if (data.DishTypeAvailable === false) {
+      await prisma.dish.updateMany({
+        where: { dishType: id },
+        data: { available: false },
+      });
+    } else {
+      await prisma.dish.updateMany({
+        where: { dishType: id },
+        data: { available: true },
+      });
+    }
+
+    return updatedDishType;
   }
 
   async deleteDishType(id) {
     // Soft delete (set isDeleted to true)
+    await prisma.dish.updateMany({
+      where: { dishType: id },
+      data: { isDeleted: true },
+    });
     return await prisma.DishType.update({
       where: { id },
       data: { isDeleted: true },
     });
   }
 }
-
 
 module.exports = new DishTypeService();

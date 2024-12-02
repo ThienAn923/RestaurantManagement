@@ -581,16 +581,15 @@ model ClientTemporary {
 }
 
 model Room {
-  id         String    @id @default(auto()) @map("_id") @db.ObjectId
-  roomKey    String
-  clientId   String    @db.ObjectId
-  employeeId String    @db.ObjectId
-  messages   Message[]
-  createdAt  DateTime  @default(now())
-  updatedAt  DateTime  @updatedAt
+  id        String    @id @default(auto()) @map("_id") @db.ObjectId
+  clientId  String    @db.ObjectId
+  messages  Message[]
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
 
-  client   Client   @relation(fields: [clientId], references: [id])
-  employee Employee @relation(fields: [employeeId], references: [id])
+  client     Client    @relation(fields: [clientId], references: [id])
+  Employee   Employee? @relation(fields: [employeeId], references: [id])
+  employeeId String?   @db.ObjectId
 }
 
 model Message {

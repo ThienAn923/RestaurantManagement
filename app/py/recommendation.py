@@ -59,7 +59,9 @@ def recommend_food(client_id, num_recommendations, rating_url, invoice_url, dish
             recommendations.append(similar_dishes.sort_values(by='recommendScore', ascending=False).head(num_recommendations))
         
         # Kết hợp tất cả các gợi ý món
-        all_recommendations = all_recommendations.sort_values(by='recommendScore', ascending=False).head(num_recommendations)        
+        all_recommendations = pd.concat(recommendations).drop_duplicates(subset=['dishID'])
+        all_recommendations = all_recommendations.sort_values(by='recommendScore', ascending=False).head(num_recommendations)
+        
         return all_recommendations['dishID'].tolist()
 
     except Exception as e:

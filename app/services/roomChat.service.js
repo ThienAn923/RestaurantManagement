@@ -1,4 +1,4 @@
-const { PrismaClient } = require('@prisma/client');
+const { PrismaClient } = require("@prisma/client");
 const prisma = new PrismaClient();
 
 class RoomService {
@@ -16,11 +16,14 @@ class RoomService {
   // Lấy phòng theo ID
   async getRoomById(roomId) {
     return await prisma.room.findUnique({
-      where: { id: roomId }
-    
+      where: { id: roomId },
     });
   }
-
+  async getRoomByClientID(clientID) {
+    return await prisma.room.findFirst({
+      where: { clientId: clientID },
+    });
+  }
   // Cập nhật thông tin phòng
   async updateRoom(roomId, roomData) {
     return await prisma.room.update({

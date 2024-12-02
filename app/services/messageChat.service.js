@@ -1,26 +1,29 @@
-const { PrismaClient } = require('@prisma/client');
+const { PrismaClient } = require("@prisma/client");
 const prisma = new PrismaClient();
 
 class MessageService {
   // Tạo một tin nhắn mới
   async createMessage(messageData) {
-    const message=  await prisma.message.create({
+    const message = await prisma.message.create({
       data: messageData,
     });
-    global.io.emit("messageCreated",message);
+    global.io.emit("messageCreated", message);
+    console.log(message);
   }
 
   // Lấy tất cả tin nhắn trong một phòng
   async getMessagesByRoomId(roomId) {
-     return await prisma.message.findMany({  
+    return await prisma.message.findMany({
+      where: {
+        roomId: roomId,
+      },
     });
-  
   }
-  async getAllMessages(){
-    const messages =  await prisma.message.findMany({  
-    });
-    global.io.emit("messageInRoom",messages);
-    return messages;  }
+  async getAllMessages() {
+    const messages = await prisma.message.findMany({});
+    global.io.emit("messageInRoom", messages);
+    return messages;
+  }
   // Lấy tin nhắn theo ID
   async getMessageById(messageId) {
     return await prisma.message.findUnique({

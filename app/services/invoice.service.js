@@ -222,9 +222,12 @@ class InvoiceService {
       }
 
       //addded later, add real client if exist into invoice
-      const client = await prisma.client.findFirst({
-        where: { id: data.ClientID },
-      });
+      let client;
+      if (data.ClientID !== "noCustomer") {
+        client = await prisma.client.findFirst({
+          where: { id: data.ClientID },
+        });
+      }
       if (client) {
         // Update invoice with the data.ClientID
         const updatedInvoice = await prisma.invoice.update({
@@ -357,6 +360,7 @@ class InvoiceService {
   }
 
   async getAllInvoices(page = 1, limit = 5) {
+    // console.log(page, limit);
     const skip = (page - 1) * limit;
     const [invoices, total] = await Promise.all([
       prisma.invoice.findMany({

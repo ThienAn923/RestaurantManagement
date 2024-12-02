@@ -187,12 +187,15 @@ app.post("/api/zalopayStatus/:app_trans_id", async (req, res) => {
 //recommendation system
 app.post("/recommend", async (req, res) => {
   try {
-    const { clientID, numRecommendations, apiURL } = req.body;
+    const { clientID, numRecommendations, ratingUrl, invoiceUrl, dishUrl } =
+      req.body;
     // Gửi yêu cầu đến Flask API
     const response = await axios.post("http://127.0.0.1:5000/recommend", {
       clientID,
       numRecommendations,
-      apiURL, // Truyền URL API vào Flask
+      ratingUrl,
+      invoiceUrl, // Truyền URL API vào Flask
+      dishUrl,
     });
 
     res.status(200).json(response.data);

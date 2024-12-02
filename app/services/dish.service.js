@@ -3,7 +3,14 @@ const prisma = require("../../prisma/client"); // Go up two directories from 'se
 
 class DishService {
   async createDish(data) {
-    const { DishName, DishDescription, imageLinks, Cost, DishType } = data;
+    const {
+      DishName,
+      DishDescription,
+      imageLinks,
+      Cost,
+      DishType,
+      timeToCook,
+    } = data;
     const dish = await prisma.dish.create({
       data: {
         name: DishName,
@@ -11,6 +18,7 @@ class DishService {
         available: true,
         dishType: DishType,
         isDeleted: false,
+        timeToCook: timeToCook,
       },
     });
 
@@ -154,6 +162,7 @@ class DishService {
 
   async updateDish(id, data) {
     try {
+      console.log("Time to cook: ", data.timeToCook);
       const dish = await prisma.dish.update({
         where: { id },
         data: {
@@ -163,6 +172,7 @@ class DishService {
           dishType: data.DishType,
           available: data.available,
           updateAt: new Date(),
+          timeToCook: data.timeToCook,
 
           isDeleted: false,
         },

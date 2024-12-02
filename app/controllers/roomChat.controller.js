@@ -1,5 +1,5 @@
 // RoomController.js
-const RoomService = require('../services/roomChat.service');
+const RoomService = require("../services/roomChat.service");
 const ApiError = require("../api-error");
 
 class RoomController {
@@ -10,7 +10,7 @@ class RoomController {
       const newRoom = await RoomService.createRoom(roomData);
       res.status(201).json(newRoom);
     } catch (error) {
-        return next(new ApiError(500, error.message));
+      return next(new ApiError(500, error.message));
     }
   }
 
@@ -20,20 +20,31 @@ class RoomController {
       const rooms = await RoomService.getAllRooms();
       res.status(200).json(rooms);
     } catch (error) {
-        return next(new ApiError(500, error.message));
+      return next(new ApiError(500, error.message));
     }
   }
 
   // Lấy phòng theo ID
-  async getRoomById(req, res,next) {
+  async getRoomById(req, res, next) {
     try {
       const room = await RoomService.getRoomById(req.params.roomId);
       if (!room) {
-        return res.status(404).json({ message: 'Phòng không tìm thấy' });
+        return res.status(404).json({ message: "Phòng không tìm thấy" });
       }
       res.status(200).json(room);
     } catch (error) {
-        return next(new ApiError(500, error.message));
+      return next(new ApiError(500, error.message));
+    }
+  }
+  async getRoomByClientID(req, res, next) {
+    try {
+      const room = await RoomService.getRoomByClientID(req.params.clientID);
+      if (!room) {
+        return res.status(404).json({ message: "Phòng không tìm thấy" });
+      }
+      res.status(200).json(room);
+    } catch (error) {
+      return next(new ApiError(500, error.message));
     }
   }
 
@@ -41,10 +52,13 @@ class RoomController {
   async updateRoom(req, res, next) {
     const roomData = req.body;
     try {
-      const updatedRoom = await RoomService.updateRoom(req.params.roomId, roomData);
+      const updatedRoom = await RoomService.updateRoom(
+        req.params.roomId,
+        roomData
+      );
       res.status(200).json(updatedRoom);
     } catch (error) {
-        return next(new ApiError(500, error.message));
+      return next(new ApiError(500, error.message));
     }
   }
 
@@ -54,7 +68,7 @@ class RoomController {
       await RoomService.deleteRoom(req.params.roomId);
       res.status(204).send(); // Xóa thành công, không trả về nội dung
     } catch (error) {
-        return next(new ApiError(500, error.message));
+      return next(new ApiError(500, error.message));
     }
   }
 }

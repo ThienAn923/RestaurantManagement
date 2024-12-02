@@ -28,7 +28,12 @@ class InvoiceController {
 
   async getAllInvoices(req, res, next) {
     try {
-      const invoices = await invoiceService.getAllInvoices();
+      req.query.page = parseInt(req.query.page);
+      req.query.limit = parseInt(req.query.limit);
+      const invoices = await invoiceService.getAllInvoices(
+        req.query.page,
+        req.query.limit
+      );
       // const lalala = await invoiceService.createInvoicesForAllOrders();
       res.status(200).json(invoices);
     } catch (error) {

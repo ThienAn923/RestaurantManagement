@@ -14,6 +14,7 @@ router
   .get(RoomChatController.getRoomById)
   .put(RoomChatController.updateRoom)
   .delete(RoomChatController.deleteRoom);
+router.route("/client/:clientID").get(RoomChatController.getRoomByClientID);
 router
   .route("/messages/:id")
   .get(MessageChatController.getMessagesByRoomId)
