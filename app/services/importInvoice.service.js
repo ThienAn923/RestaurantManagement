@@ -1,198 +1,228 @@
-const { PrismaClient } = require('@prisma/client');
+const { PrismaClient } = require("@prisma/client");
 const prisma = new PrismaClient();
 
 class ImportInvoiceService {
-    async createImportInvoice(data) {
+  async createImportInvoice(data) {
+    const { employeeId, providerId, importInvoiceDetails } = data;
+    console.log(
+      "running from importinsvoice.service. Data:",
+      importInvoiceDetails
+    );
+    let totalExpense = 0;
+    let quantity = 0;
 
-        const { employeeId, providerId, importInvoiceDetails } = data;
-        console.log("running from importinsvoice.service. Data:",importInvoiceDetails);
-        let totalExpense = 0;
-        let quantity=0
-        
-        //create import invoice, make totakExpense = 0 first
-        const importInvoice = await prisma.importInvoice.create({
-            data: {
-                Employee: {
-                    connect: {id: employeeId}
-                },
-                Provider: {
-                    connect: {id: providerId}
-                },
-                importDate: new Date(),
-                totalExpense: 0,
-            },
-        });
+    //create import invoice, make totakExpense = 0 first
+    const importInvoice = await prisma.importInvoice.create({
+      data: {
+        Employee: {
+          connect: { id: employeeId },
+        },
+        Provider: {
+          connect: { id: providerId },
+        },
+        importDate: new Date(),
+        totalExpense: 0,
+      },
+    });
 
-        //create import invoice details, calculate totalExpense
-        for (const detail of importInvoiceDetails) {
-            totalExpense += detail.quantity * detail.price;
-            console.log("AHHHHHHHHHH debug!!!" + detail.quantity + " " + detail.price + " " + detail.ingredientId + totalExpense)
-            quantity+=1
-            // const ingredient = await prisma.ingredient.findUnique({ where: { id: detail.ingredientId } });
-            // const totalExpenses = detail.quantity * ingredient.price;
-            
-            const importInvoiceDetail = await prisma.importInvoiceDetail.create({
-                data: {
-                    totalExpense: detail.quantity * detail.price, // like... stop... stop coding like this, stop coding shits that make the backend got ta fix everything from frontend to backend, stopppp. i fucking hate fixing this function!! The data send from the front end is shit!! Who the fuck code the front end
-                    quantity: quantity,
-                    price: detail.price,
-                    ImportInvoice: {
-                        connect: {id: importInvoice.id}
-                    },
-                    ingredient: {
-                        connect: {id: detail.ingredientId}
-                    }
-                },
-            });
-        }
+    //create import invoice details, calculate totalExpense
+    for (const detail of importInvoiceDetails) {
+      totalExpense += detail.quantity * detail.price;
+      console.log(
+        "AHHHHHHHHHH debug!!!" +
+          detail.quantity +
+          " " +
+          detail.price +
+          " " +
+          detail.ingredientId +
+          totalExpense
+      );
+      quantity += 1;
+      // const ingredient = await prisma.ingredient.findUnique({ where: { id: detail.ingredientId } });
+      // const totalExpenses = detail.quantity * ingredient.price;
 
-        //update totalExpense
-        await prisma.importInvoice.update({
-            where: { id: importInvoice.id },
-            data: { totalExpense: totalExpense },
-        });
-
-        return importInvoice;
+      const importInvoiceDetail = await prisma.importInvoiceDetail.create({
+        data: {
+          totalExpense: detail.quantity * detail.price, // like... stop... stop coding like this, stop coding shits that make the backend got ta fix everything from frontend to backend, stopppp. i fucking hate fixing this function!! The data send from the front end is shit!! Who the fuck code the front end
+          quantity: quantity,
+          price: detail.price,
+          ImportInvoice: {
+            connect: { id: importInvoice.id },
+          },
+          ingredient: {
+            connect: { id: detail.ingredientId },
+          },
+        },
+      });
     }
 
-    async getImportInvoiceById(id) {
-        return await prisma.importInvoice.findUnique({
-            where: { id },
-            include: {
-                importInvoiceDetails: true,
-                provider: true,
-                employee: true,
-            },
-        });
+    //update totalExpense
+    await prisma.importInvoice.update({
+      where: { id: importInvoice.id },
+      data: { totalExpense: totalExpense },
+    });
+
+    return importInvoice;
+  }
+
+  async getImportInvoiceById(id) {
+    return await prisma.importInvoice.findUnique({
+      where: { id },
+      include: {
+        importInvoiceDetails: true,
+        provider: true,
+        employee: true,
+      },
+    });
+  }
+
+  async getAllImportInvoicesREAL() {
+    return await prisma.importInvoice.findMany({
+      include: {
+        importInvoiceDetail: true,
+        Provider: true,
+        Employee: true,
+      },
+    });
+  }
+
+  //pinia pagination
+  async getAllImportInvoices(
+    page,
+    limit,
+    sortColumn,
+    sortOrder,
+    filter = "AllProvider",
+    search = ""
+  ) {
+    const skip = (page - 1) * limit;
+    //doesn't support nested sort yet
+    // const orderBy = { [sortColumn]: sortOrder };
+
+    //support nested sort
+    // const orderBy = sortColumn.includes('Provider.')
+    //     ? { Provider: { providerName: sortOrder } }
+    //     : { [sortColumn]: sortOrder };
+
+    // const [importInvoices, totalCount] = await Promise.all([
+    //     prisma.importInvoice.findMany({
+    //         skip,
+    //         take: limit,
+    //         orderBy,
+    //         include: {
+    //             importInvoiceDetail: {
+    //                 include: {
+    //                     ingredient: true
+    //                 }
+    //             },
+    //             Provider: true,
+    //             Employee: true,
+    //         },
+    //     }),
+    //     prisma.importInvoice.count()
+    // ]);
+
+    let where;
+    if (filter !== "AllProvider" || search !== "") {
+      where = {
+        //And condition combined filter and search, if filter is not AllProvider, add providerStatus to where
+        //If search is not empty, add OR condition to where to search by createAt
+        //why there is AND here? it actually because i copy pasted this XD
+        //it suppose to have "isDeleted: false" here but since invoice cannot be deleted, i remove it
+        ...(filter !== "AllProvider" ? [{ providerName: filter }] : []),
+        ...(search !== ""
+          ? [
+              {
+                OR: [
+                  { createAt: { contains: search } },
+                  // employee name
+                ],
+              },
+            ]
+          : []),
+      };
     }
 
-    async getAllImportInvoicesREAL() {
-        return await prisma.importInvoice.findMany({
-            include: {
-                importInvoiceDetail: true,
-                Provider: true,
-                Employee: true,
-            },
-        });
-    }
-
-    //pinia pagination
-    async getAllImportInvoices(page, limit, sortColumn, sortOrder, filter = 'AllProvider', search = '') {
-        const skip = (page - 1) * limit;
-        //doesn't support nested sort yet
-        // const orderBy = { [sortColumn]: sortOrder };
-        
-        //support nested sort
-        // const orderBy = sortColumn.includes('Provider.')
-        //     ? { Provider: { providerName: sortOrder } }
-        //     : { [sortColumn]: sortOrder };
-
-        
-        // const [importInvoices, totalCount] = await Promise.all([
-        //     prisma.importInvoice.findMany({
-        //         skip,
-        //         take: limit,
-        //         orderBy,
-        //         include: {
-        //             importInvoiceDetail: {
-        //                 include: {
-        //                     ingredient: true
-        //                 }
-        //             },
-        //             Provider: true,
-        //             Employee: true,
-        //         },
-        //     }),
-        //     prisma.importInvoice.count()
-        // ]);
-
-        let where;
-        if (filter !== 'AllProvider' || search !== '') {
-            where = {
-                //And condition combined filter and search, if filter is not AllProvider, add providerStatus to where
-                //If search is not empty, add OR condition to where to search by createAt
-                //why there is AND here? it actually because i copy pasted this XD
-                //it suppose to have "isDeleted: false" here but since invoice cannot be deleted, i remove it
-                    ...(filter !== 'AllProvider' ? [{ providerName: filter }] : []),
-                    ...(search !== '' ? [
-                        {
-                            OR: [
-                                { createAt: { contains: search } },
-                                // employee name
-                            ]
-                        }
-                    ] : [])
-            };
-        }
-
-        const [data, total] = await Promise.all([
-            prisma.importInvoice.findMany({
-            where,
-            skip,
-            take: limit,
-            // orderBy, //bullshit, the sort is not working, so i gotta put it down, fix latter
+    const [data, total] = await Promise.all([
+      prisma.importInvoice.findMany({
+        where,
+        skip,
+        take: limit,
+        // orderBy, //bullshit, the sort is not working, so i gotta put it down, fix latter
+        select: {
+          id: true,
+          importDate: true,
+          totalExpense: true,
+          providerID: true,
+          employeeID: true,
+          createAt: true,
+          importInvoiceDetail: {
             select: {
-                id: true,
-                importDate: true,
-                totalExpense: true,
-                providerID: true,
-                employeeID: true,
-                createAt: true,
-                importInvoiceDetail: true,
-                Provider: {
-                    select: {
-                        id: true,
-                        providerName: true,
-                        providerDescription: true,
-                        providerPhoneNumber: true,
-                        providerEmail: true,
-                        providerAddress: true,
-                        providerStatus: true,
-                        isDeleted: true,
-                        updateAt: true,
-                        createAt: true,
-                    }
-                },
-                Employee: {
-                    select: {
-                        id: true,
-                        employeeAdress: true,
-                        employeeGender: true,
-                        employeeDateOfBirth: true,
-                        employeePhoneNumber: true,
-                        employeeEmail: true,
-                        personId: true,
-                        isDeleted: true,
-                        updateAt: true,
-                        createAt: true,
-                    }
-                }
+              id: true,
+              ingredientID: true,
+              quantity: true,
+              price: true,
+              totalExpense: true,
+              createAt: true,
+              importInvoiceID: true,
+              ingredient: true,
             },
-            }),
-            //count total data of the input condition   
-            prisma.importInvoice.count({ where }),
-        ]);
-
-        return {
-            data,
-            total,
-            page,
-            limit,
-            filter,
-            search,
-            totalPages: Math.ceil(total / limit),
-        };
-    }
-
-    //i don't know if this have any uses anymore. i write this just in case
-    async getProvider(id){
-        return await prisma.importInvoice.findUnique({
-            where: { id },
+          },
+          Provider: {
             select: {
-                provider: true,
+              id: true,
+              providerName: true,
+              providerDescription: true,
+              providerPhoneNumber: true,
+              providerEmail: true,
+              providerAddress: true,
+              providerStatus: true,
+              isDeleted: true,
+              updateAt: true,
+              createAt: true,
             },
-        });
-    }
+          },
+          Employee: {
+            select: {
+              id: true,
+              employeeAdress: true,
+              employeeGender: true,
+              employeeDateOfBirth: true,
+              employeePhoneNumber: true,
+              employeeEmail: true,
+              personId: true,
+              isDeleted: true,
+              updateAt: true,
+              createAt: true,
+              person: true,
+            },
+          },
+        },
+      }),
+      //count total data of the input condition
+      prisma.importInvoice.count({ where }),
+    ]);
+
+    return {
+      data,
+      total,
+      page,
+      limit,
+      filter,
+      search,
+      totalPages: Math.ceil(total / limit),
+    };
+  }
+
+  //i don't know if this have any uses anymore. i write this just in case
+  async getProvider(id) {
+    return await prisma.importInvoice.findUnique({
+      where: { id },
+      select: {
+        provider: true,
+      },
+    });
+  }
 }
 
 module.exports = new ImportInvoiceService();

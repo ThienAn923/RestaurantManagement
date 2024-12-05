@@ -142,6 +142,12 @@ class AccountService {
       console.log("No account found for username:", username);
       return null;
     }
+    if (account.isDeleted === true) {
+      console.log(
+        "Account is deleted, this user cannot login using this account"
+      );
+      return null;
+    }
 
     const isPasswordValid = await bcrypt.compare(
       password,

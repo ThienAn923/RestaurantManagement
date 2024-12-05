@@ -1,6 +1,8 @@
 import pandas as pd
 import requests
 from flask import Flask, jsonify, request
+from sklearn.metrics.pairwise import cosine_similarity
+import numpy as np
 
 # Tạo Flask API
 app = Flask(__name__)
@@ -13,56 +15,66 @@ def fetch_data(api_url):
     else:
         raise Exception(f"Failed to fetch data from API. Status code: {response.status_code}")
 
-# Hàm tính gợi ý món ăn
+# Hàm tính gợi ý món ăn sử dụng cosine_similarity
 def recommend_food(client_id, num_recommendations, rating_url, invoice_url, dish_url):
     try:
+        # Lấy dữ liệu từ API
         ratings_data = fetch_data(rating_url)
         invoice_data = fetch_data(invoice_url)
         dish = fetch_data(dish_url)
         dish_data = dish["data"]
+
+        # Chuyển đổi dữ liệu thành DataFrame
         ratings_df = pd.DataFrame(ratings_data)
-        ratings_df = ratings_df.groupby(['dishID'], as_index=False)['ratingStar'].mean()  
-        dish_df = pd.DataFrame(dish_data)
         invoice_df = pd.DataFrame(invoice_data)
+        dish_df = pd.DataFrame(dish_data)
 
         # Lọc các hóa đơn của khách hàng theo clientId
         client_invoices = invoice_df[invoice_df['clientId'] == client_id]
         if client_invoices.empty:
-            raise Exception("No invoices found for the given client ID.")
-        
+            # Nếu không có hóa đơn cho client, gợi ý các món phổ biến nhất
+            popular_dishes = ratings_df.groupby('dishID')['ratingStar'].mean().sort_values(ascending=False).head(num_recommendations).index.tolist()
+            return popular_dishes
+
+        # Tạo danh sách món đã ăn từ hóa đơn của khách hàng
         eaten_dishes = []
         for details in client_invoices['invoiceDetail_list']:
-            # Duyệt qua từng chi tiết hóa đơn và lấy dishID từ Dish (các món đã ăn)
             eaten_dishes.extend([detail['Dish']['id'] for detail in details])
 
-        eaten_dishes_df = pd.DataFrame({'dishID': eaten_dishes})
+        # Tạo ma trận người dùng - món ăn
+        user_dish_matrix = ratings_df.pivot_table(index='clientID', columns='dishID', values='ratingStar', fill_value=0)
+        
+        # Tính toán sự tương đồng giữa các người dùng (user-user similarity)
+        user_similarity = cosine_similarity(user_dish_matrix)
+        user_ids = user_dish_matrix.index
+        user_similarity_df = pd.DataFrame(user_similarity, index=user_ids, columns=user_ids)
 
-        # Kết hợp rating và món đã ăn
-        ratings_df['isEaten'] = ratings_df['dishID'].isin(eaten_dishes_df['dishID'])
+        # Tìm người dùng tương tự nhất với client_id
+        similar_users = user_similarity_df[client_id].sort_values(ascending=False).head(6).index.tolist()  # 5 người dùng tương tự nhất
+        # Tạo danh sách món ăn mà những người dùng tương tự đã đánh giá cao
         
-        # Thêm điểm ưu tiên cho món đã ăn (tăng điểm cho món đã ăn)
-        ratings_df['recommendScore'] = ratings_df['ratingStar'] + ratings_df['isEaten'] * 2
-        
-        # Nếu không có món đã ăn, gợi ý các món phổ biến nhất (theo số lượt order)
-        if eaten_dishes_df.empty:
-            popular_dishes = ratings_df.sort_values(by='ratingStar', ascending=False).head(num_recommendations)
-            return popular_dishes['dishID'].tolist()
-        
-        # Thêm thông tin dishType vào DataFrame
-        ratings_df = pd.merge(ratings_df, dish_df[['id', 'dishType']], left_on='dishID', right_on='id', how='left')
-        
-        # Tạo cột gợi ý món tương tự dựa trên dishType
-        recommendations = []
-        for dish_id in eaten_dishes_df['dishID']:
-            dish_type = dish_df[dish_df['id'] == dish_id]['dishType'].iloc[0]
-            similar_dishes = ratings_df[ratings_df['dishType'] == dish_type]
-            recommendations.append(similar_dishes.sort_values(by='recommendScore', ascending=False).head(num_recommendations))
-        
-        # Kết hợp tất cả các gợi ý món
-        all_recommendations = pd.concat(recommendations).drop_duplicates(subset=['dishID'])
-        all_recommendations = all_recommendations.sort_values(by='recommendScore', ascending=False).head(num_recommendations)
-        
-        return all_recommendations['dishID'].tolist()
+        recommended_dishes = []
+        for user in similar_users:
+            if user != client_id:  # Tránh sử dụng chính người dùng đó
+                user_ratings = user_dish_matrix.loc[user]
+                # Lọc các món ăn người dùng này đã đánh giá cao nhưng khách hàng chưa ăn
+                user_recommendations = user_ratings[user_ratings >= 4].index.tolist()  # Chọn món có điểm đánh giá từ 4 trở lên
+                recommended_dishes.extend([dish_id for dish_id in user_recommendations])
+                print(recommended_dishes)
+        # Loại bỏ trùng lặp
+        recommended_dishes = list(dict.fromkeys(recommended_dishes))  # Loại bỏ trùng lặp
+
+        # Nếu không đủ gợi ý, tìm các món ăn phổ biến nhất mà người dùng chưa thử
+        if len(recommended_dishes) < num_recommendations:
+            popular_dishes = ratings_df.groupby('dishID').size().sort_values(ascending=False).head(num_recommendations).index.tolist()
+            recommended_dishes.extend([dish_id for dish_id in popular_dishes if dish_id not in eaten_dishes])
+
+        # Chọn số lượng gợi ý cần thiết
+        recommended_dishes = recommended_dishes[:num_recommendations]
+
+        # Lấy thông tin món ăn gợi ý
+        recommended_dishes_info = dish_df[dish_df['id'].isin(recommended_dishes)]
+        return recommended_dishes_info['id'].tolist()
 
     except Exception as e:
         return {"error": str(e)}
@@ -74,9 +86,9 @@ def recommend():
         data = request.get_json()
         client_id = data.get('clientID')
         num_recommendations = data.get('numRecommendations', 5)
-        rating_url = data.get('ratingURL')
-        invoice_url = data.get('invoiceURL')
-        dish_url = data.get('dishURL')
+        rating_url = data.get('ratingUrl')
+        invoice_url = data.get('invoiceUrl')
+        dish_url = data.get('dishUrl')
 
         recommendations = recommend_food(client_id, num_recommendations, rating_url, invoice_url, dish_url)
         return jsonify({"recommendations": recommendations})

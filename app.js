@@ -189,12 +189,14 @@ app.post("/recommend", async (req, res) => {
   try {
     const { clientID, numRecommendations, ratingUrl, invoiceUrl, dishUrl } =
       req.body;
+    console.log("Request Body:", req.body); // In dữ liệu gửi đến Flask API
+
     // Gửi yêu cầu đến Flask API
     const response = await axios.post("http://127.0.0.1:5000/recommend", {
       clientID,
       numRecommendations,
       ratingUrl,
-      invoiceUrl, // Truyền URL API vào Flask
+      invoiceUrl,
       dishUrl,
     });
 
